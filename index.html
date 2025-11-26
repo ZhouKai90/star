@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>超级星星存钱罐 - 日期关联</title>
+    
+    <!-- PWA 设置 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="星星存钱罐">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/616/616490.png">
+    
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- 引入 Babel 用于解析 JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        body { -webkit-tap-highlight-color: transparent; font-family: 'Inter', sans-serif; }
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
+        .animate-bounce-in { animation: fade-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .modal-bg { background-color: rgba(0, 0, 0, 0.5); }
+        /* 确保日历条可以横向滚动 */
+        .calendar-strip::-webkit-scrollbar { display: none; }
+        .calendar-strip { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        // 从 esm.sh 引入官方依赖库
+        import React, { useState, useEffect, useCallback, useMemo } from 'https://esm.sh/react@18.2.0';
+        import { createRoot } from 'https://esm.sh/react-dom@18.2.0/client';
+        // 引入完整的 lucide-react 库
+        import { Star, Plus, Trash2, CheckCircle, Gift, Settings, X, History, Calendar, AlertTriangle, ChevronLeft, ChevronRight } from 'https://esm.sh/lucide-react@0.292.0';
+
+        
+        const App = () => {
+            // --- 状态管理 ---
+            const [stars, setStars] = useState(0);
+            const [activeTab, setActiveTab] = useState('earn');
+            const [showConfetti, setShowConfetti] = useState(false);
+            const [notification, setNotification] = useState(null);
+            const [history, setHistory] = useState([]);
+            const [selectedDate, setSelectedDate] = useState(new Date()); // NEW: 选中的日期
+            
+            // --- 模态框状态 ---
+            const [showModal, setShowModal] = useState(false);
+            const [modalContent, setModalContent] = useState({});
+            const [modalAction, setModalAction] = useState(() => () => {}); 
+
+            // 默认数据
+            const defaultTasks = [
+                { id: 1, title: '按时刷牙', value: 1, icon: '🦷' },
+                { id: 2, title: '收拾玩具', value: 2, icon: '🧸' },
+                { id: 3, title: '阅读绘本(20分钟)', value: 3, icon: '📚' },
+                { id: 4, title: '吃完青菜', value: 2, icon: '🥦' },
+            ];
+
+            const defaultRewards = [
+                { id: 1, title: '看电视 (30分钟)', cost: 5, icon: '📺' },
+                { id: 2, title: '吃冰淇淋', cost: 10, icon: '🍦' },
+                { id: 3, title: '去公园玩', cost: 15, icon: '🎡' },
+                { id: 4, title: '买一个小玩具', cost: 50, icon: '🎁' },
+            ];
+
+            const defaultBadHabits = [
+                { id: 101, title: '撒谎', value: 5, icon: '🤥' },
+                { id: 102, title: '乱发脾气', value: 3, icon: '😠' },
+                { id: 103, title: '未经允许拿东西', value: 2, icon: '✋' },
+            ];
+
+
+            const [tasks, setTasks] = useState(defaultTasks);
+            const [rewards, setRewards] = useState(defaultRewards);
+            const [badHabits, setBadHabits] = useState(defaultBadHabits); 
+
+            // --- 日期和时间工具函数 ---
+            const isSameDay = (date1, date2) => {
+                return date1.toDateString() === date2.toDateString();
+            };
+
+            const isToday = (date) => isSameDay(date, new Date());
+            
+            // 获取当前日期所在周（从周日开始）的日期列表
+            const getWeekDays = (date) => {
+                const days = [];
+                const day = new Date(date);
+                // 找到本周的第一天（周日）
+                day.setDate(day.getDate() - day.getDay()); 
+                
+                for (let i = 0; i < 7; i++) {
+                    days.push(new Date(day));
+                    day.setDate(day.getDate() + 1);
+                }
+                return days;
+            };
+            
+            const weekDaysNames = useMemo(() => ['日', '一', '二', '三', '四', '五', '六'], []);
+
+
+            // --- 本地存储持久化 ---
+            useEffect(() => {
+                const savedStars = localStorage.getItem('starJar_stars');
+                const savedTasks = localStorage.getItem('starJar_tasks');
+                const savedRewards = localStorage.getItem('starJar_rewards');
+                const savedHistory = localStorage.getItem('starJar_history');
+                const savedBadHabits = localStorage.getItem('starJar_badHabits'); 
+
+                if (savedStars) setStars(parseInt(savedStars, 10));
+                if (savedTasks) setTasks(JSON.parse(savedTasks));
+                if (savedRewards) setRewards(JSON.parse(savedRewards));
+                if (savedHistory) setHistory(JSON.parse(savedHistory));
+                if (savedBadHabits) setBadHabits(JSON.parse(savedBadHabits)); 
+            }, []);
+
+            useEffect(() => {
+                localStorage.setItem('starJar_stars', stars);
+                localStorage.setItem('starJar_tasks', JSON.stringify(tasks));
+                localStorage.setItem('starJar_rewards', JSON.stringify(rewards));
+                localStorage.setItem('starJar_history', JSON.stringify(history));
+                localStorage.setItem('starJar_badHabits', JSON.stringify(badHabits)); 
+            }, [stars, tasks, rewards, history, badHabits]);
+
+            // --- 交互逻辑 ---
+            const showNotificationMsg = (msg, type = 'success') => {
+                setNotification({ msg, type });
+                setTimeout(() => setNotification(null), 2000);
+            };
+
+            const triggerAnimation = () => {
+                setShowConfetti(true);
+                setTimeout(() => setShowConfetti(false), 1000);
+            };
+            
+            /**
+             * 检查任务在指定日期是否已完成。（每日任务）
+             */
+            const getTaskCompletionCountForDate = useCallback((taskTitle, date) => {
+                const dateString = date.toDateString();
+                return history.filter(item => 
+                    item.title === taskTitle && 
+                    item.type === 'earn' && 
+                    new Date(item.date).toDateString() === dateString
+                ).length;
+            }, [history]);
+
+            // 兑换奖励逻辑 (消费星星)
+            const completeSpendStar = useCallback((reward) => {
+                setStars(prev => prev - reward.cost);
+                
+                const newRecord = {
+                    id: Date.now(),
+                    title: reward.title,
+                    value: reward.cost,
+                    type: 'spend',
+                    date: new Date().toISOString(), // 奖励兑换使用当前日期
+                    icon: reward.icon
+                };
+                setHistory(prev => [newRecord, ...prev]);
+
+                showNotificationMsg(`兑换成功！享受你的 "${reward.title}" 吧！`, 'success');
+            }, [setStars, setHistory, showNotificationMsg]);
+
+
+            // 赚星星逻辑 (与 selectedDate 关联)
+            const handleEarnStar = (task) => {
+                // 检查任务是否已在 selectedDate 完成
+                if (getTaskCompletionCountForDate(task.title, selectedDate) > 0) {
+                    showNotificationMsg(`“${task.title}” 在 ${selectedDate.toLocaleDateString('zh-CN')} 已经完成过了！`, 'error');
+                    return; // 阻止重复完成
+                }
+
+                // 只有在 selectedDate 是今天或未来（理论上）时才允许赚星
+                if (selectedDate > new Date() && !isSameDay(selectedDate, new Date())) {
+                     showNotificationMsg(`不能为未来的日期赚取星星哦！`, 'error');
+                     return;
+                }
+
+                const amount = task.value;
+                setStars(prev => prev + amount);
+                
+                const newRecord = {
+                    id: Date.now(),
+                    title: task.title,
+                    value: amount,
+                    type: 'earn',
+                    date: selectedDate.toISOString(), // 使用 selectedDate 作为记录时间
+                    icon: task.icon
+                };
+                setHistory(prev => [newRecord, ...prev]);
+
+                showNotificationMsg(`太棒了！完成 “${task.title}” 获得 +${amount} ⭐️`);
+                triggerAnimation();
+            };
+
+            // 花星星兑换逻辑 (触发模态框)
+            const handleSpendStar = (reward) => {
+                if (stars >= reward.cost) {
+                    setModalContent({
+                        title: '确认兑换',
+                        message: `确定要消耗 ${reward.cost} 颗星星兑换 "${reward.title}" 吗？`,
+                        confirmText: '确认兑换',
+                        cancelText: '取消',
+                        isDanger: false,
+                    });
+                    setModalAction(() => () => completeSpendStar(reward));
+                    setShowModal(true);
+                } else {
+                    showNotificationMsg(`星星不够哦，还需要 ${reward.cost - stars} 颗星星！`, 'error');
+                }
+            };
+            
+            // 扣星星完成逻辑
+            const completeDeductStar = useCallback((habit) => {
+                setStars(prev => prev - habit.value);
+                
+                const newRecord = {
+                    id: Date.now(),
+                    title: habit.title,
+                    value: habit.value,
+                    type: 'deduct', 
+                    date: new Date().toISOString(), // 坏习惯惩罚使用当前日期
+                    icon: habit.icon
+                };
+                setHistory(prev => [newRecord, ...prev]);
+
+                showNotificationMsg(`扣星成功！因 "${habit.title}" 扣除 ${habit.value} 颗星。`, 'error');
+            }, [setStars, setHistory, showNotificationMsg]);
+
+            // 扣星星逻辑 (触发模态框)
+            const handleDeductStar = (habit) => {
+                setModalContent({
+                    title: '确认扣除星星',
+                    message: `确定要因为 "${habit.title}" 扣除 ${habit.value} 颗星星吗？当前星星数：${stars}。`,
+                    confirmText: '确认扣除',
+                    cancelText: '取消',
+                    isDanger: true,
+                });
+                setModalAction(() => () => completeDeductStar(habit));
+                setShowModal(true);
+            };
+
+
+            const formatDate = (isoString) => {
+                const date = new Date(isoString);
+                return `${date.getMonth() + 1}月${date.getDate()}日 ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+            };
+
+            // --- 管理功能 (不变) ---
+            const [newItemType, setNewItemType] = useState('task'); 
+            const [newItemTitle, setNewItemTitle] = useState('');
+            const [newItemValue, setNewItemValue] = useState('');
+            const [newItemIcon, setNewItemIcon] = useState('🌟');
+
+            const handleAddItem = (e) => {
+                e.preventDefault();
+                if (!newItemTitle || !newItemValue) return;
+                
+                const parsedValue = parseInt(newItemValue);
+                if (isNaN(parsedValue) || parsedValue <= 0) {
+                     showNotificationMsg('星数必须是大于0的数字！', 'error');
+                     return;
+                }
+
+                const newItem = {
+                    id: Date.now(),
+                    title: newItemTitle,
+                    icon: newItemIcon,
+                };
+
+                if (newItemType === 'task') {
+                    setTasks([...tasks, { ...newItem, value: parsedValue }]);
+                    showNotificationMsg('新任务添加成功！');
+                } else if (newItemType === 'reward') {
+                    setRewards([...rewards, { ...newItem, cost: parsedValue }]);
+                    showNotificationMsg('新奖励添加成功！');
+                } else if (newItemType === 'badHabit') { 
+                    setBadHabits([...badHabits, { ...newItem, value: parsedValue }]);
+                    showNotificationMsg('新坏习惯添加成功！');
+                }
+
+                setNewItemTitle('');
+                setNewItemValue('');
+            };
+
+            const handleDeleteItem = (id, type) => {
+                setModalContent({
+                    title: '确认删除项目',
+                    message: `确定要永久删除这个${type === 'task' ? '任务' : type === 'reward' ? '奖励' : '坏习惯'}吗？此操作无法撤销。`,
+                    confirmText: '确认删除',
+                    cancelText: '取消',
+                    isDanger: true,
+                });
+                setModalAction(() => () => {
+                    if (type === 'task') {
+                        setTasks(tasks.filter(t => t.id !== id));
+                    } else if (type === 'reward') {
+                        setRewards(rewards.filter(r => r.id !== id));
+                    } else if (type === 'badHabit') {
+                        setBadHabits(badHabits.filter(h => h.id !== id));
+                    }
+                });
+                setShowModal(true);
+            };
+
+            const handleDeleteHistory = () => {
+                setModalContent({
+                    title: '清空历史记录',
+                    message: '确定要清空所有星星的收支历史记录吗？星星总数将保持不变。',
+                    confirmText: '确认清空',
+                    cancelText: '取消',
+                    isDanger: true,
+                });
+                setModalAction(() => () => setHistory([]));
+                setShowModal(true);
+            }
+            
+            const handleResetData = () => {
+                 setModalContent({
+                    title: '⚠️ 重置所有数据',
+                    message: '这将清空所有星星数量和历史记录。任务和奖励列表将保留。确定要继续吗？',
+                    confirmText: '确认重置',
+                    cancelText: '取消',
+                    isDanger: true,
+                });
+                setModalAction(() => () => {
+                    setStars(0);
+                    setHistory([]);
+                });
+                setShowModal(true);
+            }
+
+            // --- 模态框组件 (不变) ---
+            const ConfirmationModal = ({ show, content, onConfirm, onCancel }) => {
+                if (!show) return null;
+
+                const { title, message, confirmText, cancelText, isDanger } = content;
+
+                return (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 modal-bg transition-opacity duration-300">
+                        <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm animate-bounce-in">
+                            <div className="p-6">
+                                <h3 className={`font-bold text-xl mb-2 flex items-center gap-2 ${isDanger ? 'text-red-600' : 'text-slate-800'}`}>
+                                    {isDanger && <AlertTriangle size={24} />}
+                                    {title}
+                                </h3>
+                                <p className="text-slate-600 text-sm mb-6">{message}</p>
+                                
+                                <div className="flex gap-3">
+                                    <button 
+                                        onClick={onCancel}
+                                        className="flex-1 py-3 text-sm font-medium rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition"
+                                    >
+                                        {cancelText}
+                                    </button>
+                                    <button 
+                                        onClick={onConfirm}
+                                        className={`flex-1 py-3 text-sm font-bold rounded-lg text-white shadow-md transition ${isDanger ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'}`}
+                                    >
+                                        {confirmText}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            // 处理模态框的确认操作
+            const handleModalConfirm = () => {
+                modalAction(); // 执行预设的操作
+                setShowModal(false);
+            };
+
+            // --- CalendarStrip Component (New) ---
+            const CalendarStrip = ({ selectedDate, setSelectedDate }) => {
+                const weekDays = getWeekDays(selectedDate);
+                const currentMonth = selectedDate.toLocaleDateString('zh-CN', { year: 'numeric', month: 'numeric' });
+                const today = new Date();
+
+                // 切换到上一周/下一周
+                const changeWeek = (direction) => {
+                    const newDate = new Date(selectedDate);
+                    newDate.setDate(newDate.getDate() + direction * 7);
+                    setSelectedDate(newDate);
+                };
+
+                return (
+                    <div className="px-4 pb-4 bg-white shadow-inner pt-2">
+                        <div className="flex justify-between items-center mb-4 text-slate-600">
+                            <div className="flex items-center gap-2 font-bold text-lg">
+                                <span>{currentMonth}</span>
+                                {isToday(selectedDate) ? (
+                                    <span className="text-blue-500 text-sm px-2 py-0.5 bg-blue-100 rounded-full">今天</span>
+                                ) : (
+                                    <span className="text-slate-400 text-sm">{selectedDate.toLocaleDateString('zh-CN', { weekday: 'short' })}</span>
+                                )}
+                            </div>
+                            <div className="flex gap-2">
+                                <button onClick={() => changeWeek(-1)} className="p-1 rounded-full hover:bg-slate-100 transition text-slate-500">
+                                    <ChevronLeft size={20} />
+                                </button>
+                                <button onClick={() => changeWeek(1)} className="p-1 rounded-full hover:bg-slate-100 transition text-slate-500">
+                                    <ChevronRight size={20} />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* 周视图 */}
+                        <div className="flex justify-between items-center">
+                            {weekDays.map((day, index) => {
+                                const isCurrent = isSameDay(day, selectedDate);
+                                const isRealToday = isSameDay(day, today);
+                                
+                                return (
+                                    <div 
+                                        key={index} 
+                                        onClick={() => setSelectedDate(day)}
+                                        className={`flex flex-col items-center p-1 cursor-pointer transition active:scale-95`}
+                                    >
+                                        <span className={`text-xs font-medium mb-1 ${isCurrent ? 'text-white' : 'text-slate-500'}`}>
+                                            周{weekDaysNames[day.getDay()]}
+                                        </span>
+                                        <div className={`w-9 h-9 flex items-center justify-center rounded-full font-bold text-lg transition-all ${
+                                            isCurrent 
+                                                ? 'bg-blue-500 text-white shadow-lg' 
+                                                : isRealToday 
+                                                    ? 'bg-blue-100 text-blue-600' 
+                                                    : 'text-slate-700 hover:bg-slate-100'
+                                        }`}>
+                                            {day.getDate()}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                );
+            };
+            
+            // --- 渲染 ---
+            return (
+                <div className="min-h-screen bg-slate-50 font-sans text-slate-800 relative overflow-hidden select-none pb-20">
+                    
+                    {/* 顶部星星展示区 */}
+                    <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-6 rounded-b-3xl shadow-lg relative z-10 pt-10">
+                        <div className="flex justify-between items-center mb-4">
+                            <h1 className="text-xl font-bold opacity-90">🌟 超级星星存钱罐</h1>
+                            <button onClick={() => setActiveTab('manage')} className="p-2 bg-white/20 rounded-full hover:bg-white/30 transition">
+                                <Settings size={20} />
+                            </button>
+                        </div>
+                        
+                        <div className="flex flex-col items-center justify-center py-4">
+                            <div className={`text-6xl font-black flex items-center gap-2 transition-transform duration-300 ${showConfetti ? 'scale-125' : 'scale-100'}`}>
+                                <span className="text-yellow-300 drop-shadow-md">{stars}</span>
+                                <Star fill="#fde047" strokeWidth={0} size={48} className="text-yellow-300 animate-pulse" />
+                            </div>
+                            <p className="text-blue-100 mt-2 text-sm font-medium">当前拥有的星星</p>
+                        </div>
+                    </div>
+                    
+                    {/* 日历条 (Calendar Strip) - 放在 Star Display 和 Tab 之间 */}
+                    <CalendarStrip selectedDate={selectedDate} setSelectedDate={setSelectedDate} />
+
+
+                    {/* 导航栏 */}
+                    <div className="flex justify-center -mt-6 relative z-20 mb-6 px-2">
+                        <div className="bg-white p-1 rounded-full shadow-md flex gap-1 w-full max-w-lg justify-between">
+                            <button 
+                                onClick={() => setActiveTab('earn')}
+                                className={`flex-1 py-2 rounded-full font-bold text-xs sm:text-sm transition-all flex justify-center items-center gap-1 ${activeTab === 'earn' ? 'bg-yellow-400 text-yellow-900 shadow-sm' : 'text-slate-500 hover:bg-slate-100'}`}
+                            >
+                                <CheckCircle size={16} /> 赚星星
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('deduct')}
+                                className={`flex-1 py-2 rounded-full font-bold text-xs sm:text-sm transition-all flex justify-center items-center gap-1 ${activeTab === 'deduct' ? 'bg-red-400 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100'}`}
+                            >
+                                <X size={16} /> 扣星星
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('spend')}
+                                className={`flex-1 py-2 rounded-full font-bold text-xs sm:text-sm transition-all flex justify-center items-center gap-1 ${activeTab === 'spend' ? 'bg-pink-400 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100'}`}
+                            >
+                                <Gift size={16} /> 换礼物
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('history')}
+                                className={`flex-1 py-2 rounded-full font-bold text-xs sm:text-sm transition-all flex justify-center items-center gap-1 ${activeTab === 'history' ? 'bg-blue-100 text-blue-700 shadow-sm' : 'text-slate-500 hover:bg-slate-100'}`}
+                            >
+                                <History size={16} /> 记录
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* 主要内容区域 */}
+                    <div className="px-4 max-w-md mx-auto">
+                        
+                        {/* 赚星星列表 */}
+                        {activeTab === 'earn' && (
+                            <div className="space-y-3 animate-fade-in">
+                                {tasks.length === 0 && <div className="text-center text-slate-400 py-10">还没有任务哦，去设置里添加吧！</div>}
+                                {tasks.map(task => {
+                                    // 检查任务是否已在 selectedDate 完成
+                                    const completionCount = getTaskCompletionCountForDate(task.title, selectedDate);
+                                    const isCompleted = completionCount > 0;
+                                    
+                                    // 禁止为未来日期赚星
+                                    const isFuture = selectedDate > new Date() && !isSameDay(selectedDate, new Date());
+                                    const isDisabled = isCompleted || isFuture;
+
+                                    return (
+                                        <div key={task.id} 
+                                            // 只有未完成且不是未来日期时才允许点击
+                                            onClick={() => !isDisabled && handleEarnStar(task)}
+                                            className={`
+                                                p-4 rounded-2xl shadow-sm border flex items-center justify-between transition-transform cursor-pointer relative overflow-hidden
+                                                ${isDisabled 
+                                                    ? 'bg-green-50 border-green-200 opacity-80 cursor-default' 
+                                                    : 'bg-white border-slate-100 active:scale-95 hover:shadow-md group'
+                                                }
+                                            `}
+                                        >
+                                            <div className="flex items-center gap-3 relative z-10">
+                                                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${isDisabled ? 'bg-green-200' : 'bg-blue-50'}`}>
+                                                    {task.icon}
+                                                </div>
+                                                <div>
+                                                    <h3 className={`font-bold text-lg ${isDisabled ? 'text-green-800' : 'text-slate-700'}`}>
+                                                        {task.title}
+                                                    </h3>
+                                                    <p className="text-xs text-slate-400 flex items-center gap-1">
+                                                        {isCompleted ? (
+                                                            <>
+                                                                <CheckCircle size={10} className="text-green-600"/> 
+                                                                <span className="text-green-600 font-bold">已完成</span>
+                                                            </>
+                                                        ) : isFuture ? (
+                                                            <>
+                                                                <Calendar size={10} /> 
+                                                                <span className="text-slate-400">未来日期</span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Calendar size={10} /> 
+                                                                <span>未完成</span>
+                                                            </>
+                                                        )}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className={`
+                                                px-3 py-1 rounded-full font-bold text-sm flex items-center gap-1 border relative z-10
+                                                ${isCompleted ? 'bg-green-100 text-green-700 border-green-300' : 'bg-yellow-50 text-yellow-600 border-yellow-100'}
+                                            `}>
+                                                {isCompleted ? '已赚取' : `+${task.value}`} <Star size={14} fill="currentColor" />
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                        
+                        {/* 扣星星列表 (不变) */}
+                        {activeTab === 'deduct' && (
+                            <div className="space-y-3 animate-fade-in">
+                                {badHabits.length === 0 && <div className="text-center text-slate-400 py-10">还没有坏习惯选项哦，去设置里添加吧！</div>}
+                                {badHabits.map(habit => {
+                                    const nextStars = stars - habit.value;
+                                    const goesNegative = nextStars < 0;
+                                    
+                                    return (
+                                        <div key={habit.id} 
+                                            onClick={() => handleDeductStar(habit)}
+                                            className={`p-4 rounded-2xl shadow-sm border flex items-center justify-between transition-transform cursor-pointer relative overflow-hidden bg-white border-slate-100 active:scale-95 hover:shadow-md group`}
+                                        >
+                                            <div className="flex items-center gap-3 z-10">
+                                                <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl bg-red-50">
+                                                    {habit.icon}
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-bold text-lg text-slate-700">{habit.title}</h3>
+                                                    <p className="text-xs text-slate-400">
+                                                        {goesNegative 
+                                                            ? <span className="text-red-500 font-bold">星星将变为负数 (剩余 {nextStars})</span> 
+                                                            : `扣星后剩余 ${nextStars} 颗`
+                                                        }
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className={`px-3 py-1 rounded-full font-bold text-sm flex items-center gap-1 border z-10 bg-red-100 text-red-600 border-red-300`}>
+                                                -{habit.value} <Star size={14} fill="currentColor" />
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+
+                        {/* 换礼物列表 (不变) */}
+                        {activeTab === 'spend' && (
+                            <div className="space-y-3 animate-fade-in">
+                                {rewards.length === 0 && <div className="text-center text-slate-400 py-10">还没有奖励哦，去设置里添加吧！</div>}
+                                {rewards.map(reward => {
+                                    const canAfford = stars >= reward.cost;
+                                    return (
+                                        <div key={reward.id} 
+                                            onClick={() => canAfford && handleSpendStar(reward)}
+                                            className={`p-4 rounded-2xl shadow-sm border flex items-center justify-between transition-transform relative overflow-hidden ${canAfford ? 'bg-white border-slate-100 active:scale-95 hover:shadow-md cursor-pointer' : 'bg-slate-100 border-transparent opacity-70 grayscale cursor-default'}`}
+                                        >
+                                            <div className="flex items-center gap-3 z-10">
+                                                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${canAfford ? 'bg-pink-50' : 'bg-slate-200'}`}>
+                                                    {reward.icon}
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-bold text-lg text-slate-700">{reward.title}</h3>
+                                                    <p className="text-xs text-slate-400">{canAfford ? '点击兑换' : '星星还不够哦'}</p>
+                                                </div>
+                                            </div>
+                                            <div className={`px-3 py-1 rounded-full font-bold text-sm flex items-center gap-1 border z-10 ${canAfford ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-slate-200 text-slate-500 border-slate-300'}`}>
+                                                -{reward.cost} <Star size={14} fill="currentColor" />
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {/* 历史记录列表 (不变) */}
+                        {activeTab === 'history' && (
+                            <div className="space-y-4 animate-fade-in">
+                                <div className="flex justify-between items-center px-2">
+                                    <h3 className="font-bold text-slate-600">最近动态</h3>
+                                    {history.length > 0 && (
+                                        <button onClick={handleDeleteHistory} className="text-xs text-red-400 hover:text-red-600">清空记录</button>
+                                    )}
+                                </div>
+                                
+                                {history.length === 0 && (
+                                    <div className="text-center text-slate-400 py-12 bg-white rounded-2xl border border-slate-100 border-dashed">
+                                        <p>还没有记录哦，快去赚星星吧！</p>
+                                    </div>
+                                )}
+
+                                <div className="space-y-2">
+                                    {history.map(record => (
+                                        <div key={record.id} className="bg-white p-3 rounded-xl border border-slate-100 flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${
+                                                    record.type === 'earn' ? 'bg-yellow-50' : 
+                                                    record.type === 'spend' ? 'bg-pink-50' : 'bg-red-50' 
+                                                }`}>
+                                                    {record.icon || (record.type === 'earn' ? '🌟' : record.type === 'spend' ? '🎁' : '❌')}
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-slate-700 text-sm">{record.title}</h4>
+                                                    <p className="text-xs text-slate-400">{formatDate(record.date)}</p>
+                                                </div>
+                                            </div>
+                                            <div className={`font-bold text-sm ${
+                                                record.type === 'earn' ? 'text-yellow-600' : 
+                                                record.type === 'spend' ? 'text-blue-600' : 'text-red-600' 
+                                            }`}>
+                                                {record.type === 'earn' ? '+' : '-'}{record.value} ⭐️
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 管理界面 (不变) */}
+                        {activeTab === 'manage' && (
+                            <div className="space-y-6 animate-fade-in">
+                                <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+                                    <h3 className="font-bold text-slate-700 mb-4 flex items-center gap-2">
+                                        <Plus size={18} className="text-blue-500"/> 添加新项目
+                                    </h3>
+                                    <form onSubmit={handleAddItem} className="space-y-3">
+                                        <div className="flex gap-1 p-1 bg-slate-100 rounded-lg">
+                                            <button type="button" onClick={() => setNewItemType('task')} className={`flex-1 py-1.5 rounded-md text-sm font-medium transition ${newItemType === 'task' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>任务 (赚星星)</button>
+                                            <button type="button" onClick={() => setNewItemType('badHabit')} className={`flex-1 py-1.5 rounded-md text-sm font-medium transition ${newItemType === 'badHabit' ? 'bg-white text-red-600 shadow-sm' : 'text-slate-500'}`}>坏习惯 (扣星星)</button>
+                                            <button type="button" onClick={() => setNewItemType('reward')} className={`flex-1 py-1.5 rounded-md text-sm font-medium transition ${newItemType === 'reward' ? 'bg-white text-pink-500 shadow-sm' : 'text-slate-500'}`}>奖励 (花星星)</button>
+                                        </div>
+
+                                        <div>
+                                            <label className="text-xs font-bold text-slate-400 uppercase ml-1">名称</label>
+                                            <input 
+                                                type="text" 
+                                                value={newItemTitle}
+                                                onChange={(e) => setNewItemTitle(e.target.value)}
+                                                placeholder={
+                                                    newItemType === 'task' ? "例如：练琴30分钟" : 
+                                                    newItemType === 'reward' ? "例如：买乐高玩具" : "例如：打人/咬人"
+                                                }
+                                                className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            />
+                                        </div>
+
+                                        <div className="flex gap-3">
+                                            <div className="flex-1">
+                                                <label className="text-xs font-bold text-slate-400 uppercase ml-1">
+                                                    {newItemType === 'task' ? '奖励星数' : newItemType === 'reward' ? '所需星数' : '扣除星数'}
+                                                </label>
+                                                <input 
+                                                    type="number" 
+                                                    value={newItemValue}
+                                                    onChange={(e) => setNewItemValue(e.target.value)}
+                                                    placeholder="1"
+                                                    className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            </div>
+                                            <div className="w-1/3">
+                                                <label className="text-xs font-bold text-slate-400 uppercase ml-1">图标</label>
+                                                <select 
+                                                    value={newItemIcon}
+                                                    onChange={(e) => setNewItemIcon(e.target.value)}
+                                                    className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none text-center"
+                                                >
+                                                    <option>🌟</option>
+                                                    <option>🦷</option>
+                                                    <option>📚</option>
+                                                    <option>🧹</option>
+                                                    <option>🧸</option>
+                                                    <option>🏃</option>
+                                                    <option>🥦</option>
+                                                    <option>😴</option>
+                                                    <option>🍦</option>
+                                                    <option>🎮</option>
+                                                    <option>🎡</option>
+                                                    <option>🎁</option>
+                                                    <option>🤥</option>
+                                                    <option>😠</option>
+                                                    <option>✋</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <button type="submit" className={`w-full py-3 rounded-xl font-bold text-white shadow-md active:scale-95 transition 
+                                            ${newItemType === 'task' ? 'bg-blue-500 hover:bg-blue-600' : 
+                                              newItemType === 'reward' ? 'bg-pink-500 hover:bg-pink-600' :
+                                              'bg-red-500 hover:bg-red-600'
+                                            }`}>
+                                            确认添加
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <h3 className="font-bold text-slate-700 ml-1">现有项目管理</h3>
+                                    <div className="space-y-2">
+                                        {tasks.map(item => (
+                                            <div key={item.id} className="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-100">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xl">{item.icon}</span>
+                                                    <span className="text-sm font-medium">{item.title}</span>
+                                                    <span className="text-xs bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded">+{item.value}</span>
+                                                </div>
+                                                <button onClick={() => handleDeleteItem(item.id, 'task')} className="text-slate-300 hover:text-red-500 p-2"><Trash2 size={16}/></button>
+                                            </div>
+                                        ))}
+                                        {badHabits.map(item => (
+                                            <div key={item.id} className="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-100">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xl">{item.icon}</span>
+                                                    <span className="text-sm font-medium">{item.title}</span>
+                                                    <span className="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded">-{item.value}</span>
+                                                </div>
+                                                <button onClick={() => handleDeleteItem(item.id, 'badHabit')} className="text-slate-300 hover:text-red-500 p-2"><Trash2 size={16}/></button>
+                                            </div>
+                                        ))}
+                                        {rewards.map(item => (
+                                            <div key={item.id} className="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-100">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xl">{item.icon}</span>
+                                                    <span className="text-sm font-medium">{item.title}</span>
+                                                    <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">-{item.cost}</span>
+                                                </div>
+                                                <button onClick={() => handleDeleteItem(item.id, 'reward')} className="text-slate-300 hover:text-red-500 p-2"><Trash2 size={16}/></button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                
+                                <div className="pt-8 pb-4 text-center">
+                                    <button 
+                                        onClick={handleResetData}
+                                        className="text-xs text-slate-400 hover:text-red-500 underline"
+                                    >
+                                        重置所有数据 (星星 & 记录)
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                    </div>
+                    
+                    {/* 模态框 (Confirmation Modal) */}
+                    <ConfirmationModal 
+                        show={showModal}
+                        content={modalContent}
+                        onConfirm={handleModalConfirm}
+                        onCancel={() => setShowModal(false)}
+                    />
+
+                    {/* 消息提示 Toasts */}
+                    {notification && (
+                        <div className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full shadow-xl flex items-center gap-2 z-50 animate-bounce-in ${notification.type === 'error' ? 'bg-red-500 text-white' : 'bg-slate-800 text-white'}`}>
+                            {notification.type === 'success' ? <CheckCircle size={18}/> : <X size={18}/>}
+                            <span className="font-medium text-sm">{notification.msg}</span>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
