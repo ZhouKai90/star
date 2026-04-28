@@ -91,6 +91,8 @@
             const [customEarnValue, setCustomEarnValue] = useState('');
             const [customDeductReason, setCustomDeductReason] = useState('');
             const [customDeductValue, setCustomDeductValue] = useState('');
+            const [customSpendReason, setCustomSpendReason] = useState('');
+            const [customSpendValue, setCustomSpendValue] = useState('');
 
             // --- 新增：编辑项目状态 ---
             const [editingItem, setEditingItem] = useState(null); // { id, type, title, value }
@@ -120,7 +122,7 @@
             const [tasks, setTasks] = useState(defaultTasks);
             const [rewards, setRewards] = useState(defaultRewards);
             const [badHabits, setBadHabits] = useState(defaultBadHabits);
-            const [allowMultiRewardSameDay, setAllowMultiRewardSameDay] = useState(false);
+            const [allowMultiRewardSameDay, setAllowMultiRewardSameDay] = useState(true);
 
             // --- 日期和时间工具函数 ---
             const isSameDay = (date1, date2) => {
@@ -162,6 +164,9 @@
                 if (savedBadHabits) setBadHabits(JSON.parse(savedBadHabits));
                 if (savedAllowMultiRewardSameDay !== null) {
                     setAllowMultiRewardSameDay(savedAllowMultiRewardSameDay === 'true');
+                } else {
+                    // 首次访问默认开启同日可重复奖励
+                    setAllowMultiRewardSameDay(true);
                 }
             }, []);
 
@@ -381,6 +386,35 @@
                     showNotificationMsg(`已扣除：${reason} -${amount} ⭐️`, 'error');
                 });
                 setShowModal(true);
+            };
+
+            const handleCustomSpend = (e) => {
+                e.preventDefault();
+                const reason = customSpendReason.trim();
+                const amount = parseInt(customSpendValue, 10);
+
+                if (!reason || isNaN(amount) || amount <= 0) {
+                    showNotificationMsg('请输入有效的兑换理由和星数', 'error');
+                    return;
+                }
+
+                if (stars < amount) {
+                    showNotificationMsg(`星星不够哦，还需要 ${amount - stars} 颗星星！`, 'error');
+                    return;
+                }
+
+                setStars(prev => prev - amount);
+                setHistory(prev => [{
+                    id: Date.now(),
+                    title: reason,
+                    value: amount,
+                    type: 'spend',
+                    date: new Date().toISOString(),
+                    icon: '🎁'
+                }, ...prev]);
+                setCustomSpendReason('');
+                setCustomSpendValue('');
+                showNotificationMsg(`已兑换：${reason} -${amount} ⭐️`, 'success');
             };
 
             // 手动修改星星逻辑
@@ -864,6 +898,32 @@
                         {/* 换礼物列表 */}
                         {activeTab === 'spend' && (
                             <div className="space-y-3 animate-fade-in">
+                                <form onSubmit={handleCustomSpend} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 space-y-2">
+                                    <p className="text-xs font-bold text-slate-500">自定义兑换</p>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={customSpendReason}
+                                            onChange={(e) => setCustomSpendReason(e.target.value)}
+                                            placeholder="输入兑换理由（例如：买贴纸）"
+                                            className="flex-1 p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
+                                        />
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            value={customSpendValue}
+                                            onChange={(e) => setCustomSpendValue(e.target.value)}
+                                            placeholder="星数"
+                                            className="w-20 p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
+                                        />
+                                        <button
+                                            type="submit"
+                                            className="px-3 py-2.5 rounded-lg bg-pink-400 text-white font-bold text-sm hover:bg-pink-500 transition"
+                                        >
+                                            兑换
+                                        </button>
+                                    </div>
+                                </form>
                                 {rewards.length === 0 && <div className="text-center text-slate-400 py-10">还没有奖励哦，去设置里添加吧！</div>}
                                 {rewards.map(reward => {
                                     const canAfford = stars >= reward.cost;
