@@ -87,6 +87,10 @@
 
             // --- 新增：手动修改星星的状态 ---
             const [manualStars, setManualStars] = useState('');
+            const [customEarnReason, setCustomEarnReason] = useState('');
+            const [customEarnValue, setCustomEarnValue] = useState('');
+            const [customDeductReason, setCustomDeductReason] = useState('');
+            const [customDeductValue, setCustomDeductValue] = useState('');
 
             // --- 新增：编辑项目状态 ---
             const [editingItem, setEditingItem] = useState(null); // { id, type, title, value }
@@ -116,6 +120,7 @@
             const [tasks, setTasks] = useState(defaultTasks);
             const [rewards, setRewards] = useState(defaultRewards);
             const [badHabits, setBadHabits] = useState(defaultBadHabits);
+            const [allowMultiRewardSameDay, setAllowMultiRewardSameDay] = useState(false);
 
             // --- 日期和时间工具函数 ---
             const isSameDay = (date1, date2) => {
@@ -148,12 +153,16 @@
                 const savedRewards = localStorage.getItem('starJar_rewards');
                 const savedHistory = localStorage.getItem('starJar_history');
                 const savedBadHabits = localStorage.getItem('starJar_badHabits');
+                const savedAllowMultiRewardSameDay = localStorage.getItem('starJar_allowMultiRewardSameDay');
 
                 if (savedStars) setStars(parseInt(savedStars, 10));
                 if (savedTasks) setTasks(JSON.parse(savedTasks));
                 if (savedRewards) setRewards(JSON.parse(savedRewards));
                 if (savedHistory) setHistory(JSON.parse(savedHistory));
                 if (savedBadHabits) setBadHabits(JSON.parse(savedBadHabits));
+                if (savedAllowMultiRewardSameDay !== null) {
+                    setAllowMultiRewardSameDay(savedAllowMultiRewardSameDay === 'true');
+                }
             }, []);
 
             useEffect(() => {
@@ -162,7 +171,8 @@
                 localStorage.setItem('starJar_rewards', JSON.stringify(rewards));
                 localStorage.setItem('starJar_history', JSON.stringify(history));
                 localStorage.setItem('starJar_badHabits', JSON.stringify(badHabits));
-            }, [stars, tasks, rewards, history, badHabits]);
+                localStorage.setItem('starJar_allowMultiRewardSameDay', String(allowMultiRewardSameDay));
+            }, [stars, tasks, rewards, history, badHabits, allowMultiRewardSameDay]);
 
             // --- 交互逻辑 ---
             const showNotificationMsg = (msg, type = 'success') => {
@@ -207,7 +217,7 @@
 
             // 赚星星逻辑
             const handleEarnStar = (task) => {
-                if (getTaskCompletionCountForDate(task.title, selectedDate) > 0) {
+                if (!allowMultiRewardSameDay && getTaskCompletionCountForDate(task.title, selectedDate) > 0) {
                     showNotificationMsg(`“${task.title}” 在 ${selectedDate.toLocaleDateString('zh-CN')} 已经完成过了！`, 'error');
                     return;
                 }
@@ -306,6 +316,70 @@
                     isDanger: true,
                 });
                 setModalAction(() => () => completeDeductStar(habit));
+                setShowModal(true);
+            };
+
+            const handleCustomEarn = (e) => {
+                e.preventDefault();
+                const reason = customEarnReason.trim();
+                const amount = parseInt(customEarnValue, 10);
+
+                if (!reason || isNaN(amount) || amount <= 0) {
+                    showNotificationMsg('请输入有效的奖励理由和星数', 'error');
+                    return;
+                }
+
+                if (selectedDate > new Date() && !isSameDay(selectedDate, new Date())) {
+                    showNotificationMsg('不能为未来的日期赚取星星哦！', 'error');
+                    return;
+                }
+
+                setStars(prev => prev + amount);
+                setHistory(prev => [{
+                    id: Date.now(),
+                    title: reason,
+                    value: amount,
+                    type: 'earn',
+                    date: selectedDate.toISOString(),
+                    icon: '✨'
+                }, ...prev]);
+                setCustomEarnReason('');
+                setCustomEarnValue('');
+                showNotificationMsg(`已添加自定义奖励：${reason} +${amount} ⭐️`);
+                triggerAnimation();
+            };
+
+            const handleCustomDeduct = (e) => {
+                e.preventDefault();
+                const reason = customDeductReason.trim();
+                const amount = parseInt(customDeductValue, 10);
+
+                if (!reason || isNaN(amount) || amount <= 0) {
+                    showNotificationMsg('请输入有效的扣星理由和星数', 'error');
+                    return;
+                }
+
+                setModalContent({
+                    title: '确认扣除星星',
+                    message: `确定要因为 "${reason}" 扣除 ${amount} 颗星星吗？当前星星数：${stars}。`,
+                    confirmText: '确认扣除',
+                    cancelText: '取消',
+                    isDanger: true,
+                });
+                setModalAction(() => () => {
+                    setStars(prev => prev - amount);
+                    setHistory(prev => [{
+                        id: Date.now(),
+                        title: reason,
+                        value: amount,
+                        type: 'deduct',
+                        date: new Date().toISOString(),
+                        icon: '📝'
+                    }, ...prev]);
+                    setCustomDeductReason('');
+                    setCustomDeductValue('');
+                    showNotificationMsg(`已扣除：${reason} -${amount} ⭐️`, 'error');
+                });
                 setShowModal(true);
             };
 
@@ -619,12 +693,38 @@
                         {/* 赚星星列表 (含撤销功能) */}
                         {activeTab === 'earn' && (
                             <div className="space-y-3 animate-fade-in">
+                                <form onSubmit={handleCustomEarn} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 space-y-2">
+                                    <p className="text-xs font-bold text-slate-500">自定义奖励</p>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={customEarnReason}
+                                            onChange={(e) => setCustomEarnReason(e.target.value)}
+                                            placeholder="输入奖励理由（例如：主动帮忙）"
+                                            className="flex-1 p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                        />
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            value={customEarnValue}
+                                            onChange={(e) => setCustomEarnValue(e.target.value)}
+                                            placeholder="星数"
+                                            className="w-20 p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                        />
+                                        <button
+                                            type="submit"
+                                            className="px-3 py-2.5 rounded-lg bg-yellow-400 text-yellow-900 font-bold text-sm hover:bg-yellow-500 transition"
+                                        >
+                                            +添加
+                                        </button>
+                                    </div>
+                                </form>
                                 {tasks.length === 0 && <div className="text-center text-slate-400 py-10">还没有任务哦，去设置里添加吧！</div>}
                                 {tasks.map(task => {
                                     const completionCount = getTaskCompletionCountForDate(task.title, selectedDate);
                                     const isCompleted = completionCount > 0;
                                     const isFuture = selectedDate > new Date() && !isSameDay(selectedDate, new Date());
-                                    const isDisabled = isCompleted || isFuture;
+                                    const isDisabled = isFuture || (!allowMultiRewardSameDay && isCompleted);
 
                                     return (
                                         <div key={task.id}
@@ -649,7 +749,9 @@
                                                         {isCompleted ? (
                                                             <>
                                                                 <CheckCircle size={10} className="text-green-600" />
-                                                                <span className="text-green-600 font-bold">已完成</span>
+                                                                <span className="text-green-600 font-bold">
+                                                                    {allowMultiRewardSameDay ? `已完成 ${completionCount} 次，可继续` : '已完成'}
+                                                                </span>
                                                             </>
                                                         ) : isFuture ? (
                                                             <>
@@ -666,25 +768,29 @@
                                                 </div>
                                             </div>
 
-                                            {/* 右侧操作区：如果是已完成，显示撤销按钮；否则显示加星星 */}
+                                            {/* 右侧操作区：显示加星星，并在有记录时显示小撤销按钮 */}
                                             <div className="relative z-10 flex items-center gap-2">
-                                                {isCompleted ? (
+                                                <div className={`
+                                                    px-3 py-1 rounded-full font-bold text-sm flex items-center gap-1 border
+                                                    ${isCompleted && allowMultiRewardSameDay
+                                                        ? 'bg-blue-50 text-blue-600 border-blue-200'
+                                                        : 'bg-yellow-50 text-yellow-600 border-yellow-100'
+                                                    }
+                                                `}>
+                                                    +{task.value} <Star size={14} fill="currentColor" />
+                                                </div>
+                                                {isCompleted && (
                                                     <button
                                                         onClick={(e) => {
-                                                            e.stopPropagation(); // 阻止冒泡
+                                                            e.stopPropagation();
                                                             handleRevokeEarn(task);
                                                         }}
-                                                        className="px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm text-slate-500 text-xs font-bold flex items-center gap-1 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition"
+                                                        className="w-7 h-7 rounded-full bg-white border border-slate-200 shadow-sm text-slate-400 flex items-center justify-center hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition"
+                                                        title="撤销一次"
+                                                        aria-label={`撤销一次 ${task.title}`}
                                                     >
-                                                        <RotateCcw size={12} /> 撤销
+                                                        <RotateCcw size={12} />
                                                     </button>
-                                                ) : (
-                                                    <div className={`
-                                                        px-3 py-1 rounded-full font-bold text-sm flex items-center gap-1 border
-                                                        ${isCompleted ? 'bg-green-100 text-green-700 border-green-300' : 'bg-yellow-50 text-yellow-600 border-yellow-100'}
-                                                    `}>
-                                                        {isCompleted ? '已赚取' : `+${task.value}`} <Star size={14} fill="currentColor" />
-                                                    </div>
                                                 )}
                                             </div>
                                         </div>
@@ -696,6 +802,32 @@
                         {/* 扣星星列表 */}
                         {activeTab === 'deduct' && (
                             <div className="space-y-3 animate-fade-in">
+                                <form onSubmit={handleCustomDeduct} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 space-y-2">
+                                    <p className="text-xs font-bold text-slate-500">自定义扣星</p>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={customDeductReason}
+                                            onChange={(e) => setCustomDeductReason(e.target.value)}
+                                            placeholder="输入扣星理由（例如：顶嘴）"
+                                            className="flex-1 p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+                                        />
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            value={customDeductValue}
+                                            onChange={(e) => setCustomDeductValue(e.target.value)}
+                                            placeholder="星数"
+                                            className="w-20 p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+                                        />
+                                        <button
+                                            type="submit"
+                                            className="px-3 py-2.5 rounded-lg bg-red-400 text-white font-bold text-sm hover:bg-red-500 transition"
+                                        >
+                                            -添加
+                                        </button>
+                                    </div>
+                                </form>
                                 {badHabits.length === 0 && <div className="text-center text-slate-400 py-10">还没有坏习惯选项哦，去设置里添加吧！</div>}
                                 {badHabits.map(habit => {
                                     const nextStars = stars - habit.value;
@@ -985,6 +1117,24 @@
                                             </div>
                                         ))}
                                     </div>
+                                </div>
+
+                                <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 mt-4">
+                                    <h3 className="font-bold text-slate-700 mb-4">奖励设置</h3>
+                                    <label className="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer">
+                                        <div>
+                                            <p className="text-sm font-medium text-slate-700">同一天可连续奖励同一任务</p>
+                                            <p className="text-xs text-slate-400">开启后，同一天同一任务可以重复点击获得星星</p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setAllowMultiRewardSameDay(prev => !prev)}
+                                            className={`w-12 h-7 rounded-full p-1 transition ${allowMultiRewardSameDay ? 'bg-blue-500' : 'bg-slate-300'}`}
+                                            aria-label="切换同日连续奖励开关"
+                                        >
+                                            <span className={`block w-5 h-5 rounded-full bg-white transition-transform ${allowMultiRewardSameDay ? 'translate-x-5' : 'translate-x-0'}`} />
+                                        </button>
+                                    </label>
                                 </div>
 
                                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 mt-4">
