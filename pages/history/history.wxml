@@ -1,0 +1,67 @@
+<view class="page">
+  <!-- 顶部导航栏 -->
+  <view class="nav-header">
+    <view class="nav-inner">
+      <view class="nav-back" bindtap="goBack">
+        <text class="nav-back-arrow">‹</text>
+      </view>
+      <text class="nav-title">记录</text>
+      <view class="nav-placeholder"></view>
+    </view>
+  </view>
+
+  <view class="content-area">
+    <view class="section-header">
+      <text class="section-title">最近动态</text>
+      <view wx:if="{{history.length > 0}}" class="clear-btn" bindtap="handleClearHistory">
+        <text class="clear-text">清空记录</text>
+      </view>
+    </view>
+
+    <view wx:if="{{history.length === 0}}" class="empty-box">
+      <text class="empty-text">还没有记录哦，快去赚星星吧！</text>
+    </view>
+
+    <view wx:else class="history-list">
+      <view wx:for="{{history}}" wx:key="id" class="history-item">
+        <view class="history-left">
+          <view class="history-icon {{item.type === 'earn' ? 'history-icon-earn' : item.type === 'spend' ? 'history-icon-spend' : 'history-icon-deduct'}}">
+            <text>{{item.icon || (item.type === 'earn' ? '🌟' : item.type === 'spend' ? '🎁' : '❌')}}</text>
+          </view>
+          <view class="history-info">
+            <text class="history-title">{{item.title}}</text>
+            <text class="history-date">{{item.formattedDate}}</text>
+          </view>
+        </view>
+        <text class="history-value {{item.type === 'earn' ? 'text-yellow' : item.type === 'spend' ? 'text-blue' : 'text-red'}}">
+          {{item.type === 'earn' ? '+' : '-'}}{{item.value}} ⭐️
+        </text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 模态框 -->
+  <view wx:if="{{showModal}}" class="modal-overlay" catchtouchmove="preventMove">
+    <view class="modal-box animate-bounce-in">
+      <view class="modal-header">
+        <text wx:if="{{modalIsDanger}}" class="modal-warn-emoji">⚠️</text>
+        <text class="modal-title {{modalIsDanger ? 'modal-title-danger' : ''}}">{{modalTitle}}</text>
+      </view>
+      <text class="modal-message">{{modalMessage}}</text>
+      <view class="modal-actions">
+        <view class="modal-btn modal-btn-cancel" bindtap="handleModalCancel">
+          <text>{{modalCancelText}}</text>
+        </view>
+        <view class="modal-btn {{modalIsDanger ? 'modal-btn-danger' : 'modal-btn-confirm'}}" bindtap="handleModalConfirm">
+          <text>{{modalConfirmText}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 通知 -->
+  <view wx:if="{{notification}}" class="notification {{notification.type === 'error' ? 'notification-error' : 'notification-success'}}">
+    <text class="notification-icon">{{notification.type === 'error' ? '✕' : '✓'}}</text>
+    <text class="notification-text">{{notification.msg}}</text>
+  </view>
+</view>

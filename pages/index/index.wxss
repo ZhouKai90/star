@@ -1,0 +1,473 @@
+/* ===== 顶部星星展示区 ===== */
+.header-bg {
+  background: linear-gradient(135deg, #3b82f6, #4f46e5);
+  padding: 80rpx 40rpx 48rpx;
+  border-radius: 0 0 48rpx 48rpx;
+  position: relative;
+  z-index: 10;
+  box-shadow: 0 8rpx 32rpx rgba(59,130,246,0.3);
+}
+.header-content {
+  max-width: 580rpx;
+  margin: 0 auto;
+}
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32rpx;
+}
+.header-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: rgba(255,255,255,0.9);
+}
+.icon-btn {
+  width: 64rpx;
+  height: 64rpx;
+  background: rgba(255,255,255,0.2);
+  border-radius: 99999rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.icon-btn:active {
+  background: rgba(255,255,255,0.3);
+}
+.icon-btn-text {
+  font-size: 28rpx;
+}
+
+.star-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24rpx 0;
+}
+.star-count {
+  font-size: 96rpx;
+  font-weight: 900;
+  color: #fde047;
+  text-shadow: 0 4rpx 8rpx rgba(0,0,0,0.15);
+  transition: transform 0.3s;
+}
+.star-count-bounce {
+  transform: scale(1.25);
+}
+.star-icon-emoji {
+  font-size: 64rpx;
+  margin-top: -8rpx;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+.star-label {
+  font-size: 24rpx;
+  color: rgba(191, 219, 254, 0.9);
+  font-weight: 500;
+  text-align: center;
+  margin-top: 8rpx;
+}
+
+/* ===== 今天日期 ===== */
+.today-bar {
+  background: #ffffff;
+  padding: 20rpx 32rpx;
+  box-shadow: inset 0 2rpx 4rpx rgba(0,0,0,0.03);
+}
+.today-label {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #475569;
+}
+
+/* ===== 导航栏 ===== */
+.tab-nav-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 16rpx;
+  margin-bottom: 32rpx;
+  padding: 0 16rpx;
+  position: relative;
+  z-index: 20;
+}
+.tab-nav-inner {
+  background: #ffffff;
+  padding: 8rpx;
+  border-radius: 99999rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.08);
+  display: flex;
+  width: 100%;
+  max-width: 580rpx;
+}
+.tab-btn {
+  flex: 1;
+  padding: 16rpx 0;
+  border-radius: 99999rpx;
+  font-weight: 700;
+  font-size: 24rpx;
+  color: #64748b;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4rpx;
+  transition: all 0.2s;
+}
+.tab-btn:active {
+  background: #f1f5f9;
+}
+.tab-btn-icon {
+  font-size: 24rpx;
+}
+.tab-btn-earn-active {
+  background: #facc15;
+  color: #713f12;
+  box-shadow: 0 2rpx 8rpx rgba(250,204,21,0.3);
+}
+.tab-btn-deduct-active {
+  background: #f87171;
+  color: #ffffff;
+  box-shadow: 0 2rpx 8rpx rgba(248,113,113,0.3);
+}
+.tab-btn-spend-active {
+  background: #f472b6;
+  color: #ffffff;
+  box-shadow: 0 2rpx 8rpx rgba(244,114,182,0.3);
+}
+
+/* ===== 内容区域 ===== */
+.content-area {
+  padding: 0 32rpx;
+  max-width: 580rpx;
+  margin: 0 auto;
+}
+
+/* ===== 自定义表单 ===== */
+.custom-form {
+  background: #ffffff;
+  padding: 24rpx;
+  border-radius: 20rpx;
+  border: 2rpx solid #f1f5f9;
+  margin-bottom: 16rpx;
+}
+.form-label {
+  font-size: 20rpx;
+  font-weight: 700;
+  color: #64748b;
+  margin-bottom: 12rpx;
+  display: block;
+}
+.form-row {
+  display: flex;
+  gap: 8rpx;
+  align-items: center;
+}
+.form-input {
+  padding: 16rpx;
+  border-radius: 12rpx;
+  background: #f8fafc;
+  border: 2rpx solid #e2e8f0;
+  font-size: 24rpx;
+  color: #334155;
+  height: 72rpx;
+  box-sizing: border-box;
+}
+.form-input:focus {
+  border-color: #3b82f6;
+}
+.form-input-num {
+  width: 140rpx;
+  text-align: center;
+}
+.form-btn {
+  padding: 16rpx 24rpx;
+  border-radius: 12rpx;
+  font-weight: 700;
+  font-size: 24rpx;
+  white-space: nowrap;
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+.form-btn:active {
+  opacity: 0.8;
+}
+.form-btn-earn {
+  background: #facc15;
+  color: #713f12;
+}
+.form-btn-deduct {
+  background: #f87171;
+  color: #ffffff;
+}
+.form-btn-spend {
+  background: #f472b6;
+  color: #ffffff;
+}
+
+/* ===== 项目卡片 ===== */
+.item-card {
+  border-radius: 20rpx;
+  border: 2rpx solid #f1f5f9;
+  margin-bottom: 12rpx;
+  overflow: hidden;
+  transition: transform 0.15s;
+}
+.item-card-clickable:active {
+  transform: scale(0.97);
+}
+.item-card-done {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  opacity: 0.9;
+}
+.item-card-disabled {
+  background: #f1f5f9;
+  border-color: transparent;
+  opacity: 0.7;
+}
+.item-card-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx;
+}
+.item-left {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  flex: 1;
+  min-width: 0;
+}
+.item-icon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 99999rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36rpx;
+  flex-shrink: 0;
+}
+.item-icon-earn {
+  background: #eff6ff;
+}
+.item-icon-done {
+  background: #bbf7d0;
+}
+.item-icon-deduct {
+  background: #fef2f2;
+}
+.item-icon-spend {
+  background: #fdf2f8;
+}
+.item-icon-dim {
+  background: #e2e8f0;
+}
+.item-info {
+  flex: 1;
+  min-width: 0;
+}
+.item-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #334155;
+  display: block;
+  line-height: 1.4;
+}
+.item-title-done {
+  color: #166534;
+}
+.item-status {
+  font-size: 20rpx;
+  color: #94a3b8;
+  display: block;
+  margin-top: 4rpx;
+}
+.item-status-done {
+  color: #16a34a;
+  font-weight: 700;
+}
+.item-status-negative {
+  color: #ef4444;
+  font-weight: 700;
+}
+.item-right {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  flex-shrink: 0;
+}
+.item-value {
+  padding: 8rpx 16rpx;
+  border-radius: 99999rpx;
+  font-weight: 700;
+  font-size: 24rpx;
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+  border: 2rpx solid;
+}
+.item-value-earn {
+  background: #fefce8;
+  color: #ca8a04;
+  border-color: #fef9c3;
+}
+.item-value-deduct {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+.item-value-spend {
+  background: #eff6ff;
+  color: #2563eb;
+  border-color: #dbeafe;
+}
+.item-value-dim {
+  background: #e2e8f0;
+  color: #64748b;
+  border-color: #cbd5e1;
+}
+.star-small {
+  font-size: 20rpx;
+}
+
+/* ===== 撤销按钮 ===== */
+.revoke-btn {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 99999rpx;
+  background: #ffffff;
+  border: 2rpx solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.revoke-btn:active {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+.revoke-icon {
+  font-size: 20rpx;
+  color: #94a3b8;
+}
+
+/* ===== 空状态 ===== */
+.empty-state {
+  text-align: center;
+  color: #94a3b8;
+  padding: 80rpx 0;
+  font-size: 28rpx;
+}
+
+/* ===== 模态框 ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32rpx;
+  background: rgba(0,0,0,0.5);
+}
+.modal-box {
+  background: #ffffff;
+  border-radius: 24rpx;
+  width: 100%;
+  max-width: 480rpx;
+  padding: 40rpx;
+  box-shadow: 0 16rpx 48rpx rgba(0,0,0,0.2);
+}
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 16rpx;
+}
+.modal-warn-emoji {
+  font-size: 36rpx;
+}
+.modal-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #1e293b;
+}
+.modal-title-danger {
+  color: #dc2626;
+}
+.modal-message {
+  font-size: 24rpx;
+  color: #475569;
+  margin-bottom: 40rpx;
+  line-height: 1.5;
+}
+.modal-actions {
+  display: flex;
+  gap: 16rpx;
+}
+.modal-btn {
+  flex: 1;
+  padding: 24rpx 0;
+  border-radius: 12rpx;
+  font-weight: 700;
+  font-size: 24rpx;
+  text-align: center;
+}
+.modal-btn:active {
+  opacity: 0.8;
+}
+.modal-btn-cancel {
+  background: #f1f5f9;
+  color: #334155;
+}
+.modal-btn-confirm {
+  background: #3b82f6;
+  color: #ffffff;
+  box-shadow: 0 4rpx 12rpx rgba(59,130,246,0.3);
+}
+.modal-btn-danger {
+  background: #ef4444;
+  color: #ffffff;
+  box-shadow: 0 4rpx 12rpx rgba(239,68,68,0.3);
+}
+
+/* ===== 通知 ===== */
+.notification {
+  position: fixed;
+  bottom: 48rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 20rpx 40rpx;
+  border-radius: 99999rpx;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  z-index: 50;
+  box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.2);
+  animation: bounceIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+.notification-success {
+  background: #1e293b;
+}
+.notification-error {
+  background: #ef4444;
+}
+.notification-icon {
+  font-size: 24rpx;
+  color: #ffffff;
+}
+.notification-text {
+  font-size: 24rpx;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+/* ===== 闪烁动画层 ===== */
+.confetti-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+}
