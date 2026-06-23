@@ -1,0 +1,136 @@
+<view class="page">
+  <view class="header-area-sm" style="padding-top:{{headerTopPadding}}rpx">
+    <view class="page-header-inner">
+      <view class="page-header-back" bindtap="goBack">
+        <text class="page-header-back-icon">‹</text>
+      </view>
+      <text class="page-header-title" style="color:#FFF;">项目管理</text>
+      <view class="page-header-actions"></view>
+    </view>
+  </view>
+
+  <!-- page-content-head directly to keep existing structure -->
+  <view class="page-content" style="margin-top:24rpx;">
+    <view class="item-section">
+      <view class="item-section-header">
+        <text class="item-section-title">项目管理</text>
+      </view>
+
+      <!-- 分类切换标签 -->
+      <view class="type-tabs">
+        <view class="type-tab {{newItemType === 'task' ? 'type-tab type-tab-earn' : 'type-tab'}}" bindtap="setType" data-type="task">⭐ 任务</view>
+        <view class="type-tab {{newItemType === 'badHabit' ? 'type-tab type-tab-deduct' : 'type-tab'}}" bindtap="setType" data-type="badHabit">🚫 坏习惯</view>
+        <view class="type-tab {{newItemType === 'reward' ? 'type-tab type-tab-spend' : 'type-tab'}}" bindtap="setType" data-type="reward">🎁 奖励</view>
+      </view>
+
+      <!-- 添加项目 -->
+      <view class="add-bar">
+        <picker class="add-icon-picker" mode="selector" range="{{iconList}}" value="{{iconIndex}}" bindchange="onIconChange">
+          <text class="add-icon-text">{{newItemIcon}}</text>
+        </picker>
+        <input class="add-input" placeholder="{{newItemType === 'task' ? '任务名称' : newItemType === 'reward' ? '奖励名称' : '习惯名称'}}" value="{{newItemTitle}}" bindinput="onTitleInput" />
+        <input class="add-num" type="number" placeholder="{{newItemType === 'reward' ? '花费' : '星数'}}" value="{{newItemValue}}" bindinput="onValueInput" />
+        <view class="add-btn {{newItemType === 'task' ? 'btn-earn' : newItemType === 'badHabit' ? 'btn-deduct' : 'btn-spend'}}" bindtap="handleAddItem">
+          <text>+</text>
+        </view>
+      </view>
+
+      <!-- 项目列表 -->
+      <view class="item-list">
+        <view wx:if="{{newItemType === 'task'}}">
+          <text class="list-empty" wx:if="{{tasks.length === 0}}">暂无任务项目</text>
+          <view wx:for="{{tasks}}" wx:key="id" class="item-row">
+            <view wx:if="{{editingId === item.id}}" class="edit-row">
+              <input class="edit-input" value="{{editTitle}}" bindinput="onEditTitleInput" />
+              <input class="edit-input-num" type="number" value="{{editValue}}" bindinput="onEditValueInput" />
+              <view class="edit-actions">
+                <view class="edit-btn edit-btn-save" bindtap="saveEdit" data-id="{{item.id}}">✓</view>
+                <view class="edit-btn edit-btn-cancel" bindtap="cancelEdit">✕</view>
+              </view>
+            </view>
+            <view wx:else class="item-row-inner" bindtap="startEdit" data-id="{{item.id}}" data-title="{{item.title}}" data-value="{{item.value}}" data-icon="{{item.icon}}" data-type="task">
+              <view class="item-row-left">
+                <text class="item-icon">{{item.icon}}</text>
+                <text class="item-name">{{item.title}}</text>
+                <text class="tag tag-earn">+{{item.value}}</text>
+              </view>
+              <view class="delete-btn" data-id="{{item.id}}" data-type="task" catchtap="deleteItem">
+                <text class="delete-icon">✕</text>
+              </view>
+            </view>
+          </view>
+        </view>
+        <view wx:elif="{{newItemType === 'badHabit'}}">
+          <text class="list-empty" wx:if="{{badHabits.length === 0}}">暂无坏习惯项目</text>
+          <view wx:for="{{badHabits}}" wx:key="id" class="item-row">
+            <view wx:if="{{editingId === item.id}}" class="edit-row">
+              <input class="edit-input" value="{{editTitle}}" bindinput="onEditTitleInput" />
+              <input class="edit-input-num" type="number" value="{{editValue}}" bindinput="onEditValueInput" />
+              <view class="edit-actions">
+                <view class="edit-btn edit-btn-save" bindtap="saveEdit" data-id="{{item.id}}">✓</view>
+                <view class="edit-btn edit-btn-cancel" bindtap="cancelEdit">✕</view>
+              </view>
+            </view>
+            <view wx:else class="item-row-inner" bindtap="startEdit" data-id="{{item.id}}" data-title="{{item.title}}" data-value="{{item.value}}" data-icon="{{item.icon}}" data-type="badHabit">
+              <view class="item-row-left">
+                <text class="item-icon">{{item.icon}}</text>
+                <text class="item-name">{{item.title}}</text>
+                <text class="tag tag-deduct">-{{item.value}}</text>
+              </view>
+              <view class="delete-btn" data-id="{{item.id}}" data-type="badHabit" catchtap="deleteItem">
+                <text class="delete-icon">✕</text>
+              </view>
+            </view>
+          </view>
+        </view>
+        <view wx:else>
+          <text class="list-empty" wx:if="{{rewards.length === 0}}">暂无奖励项目</text>
+          <view wx:for="{{rewards}}" wx:key="id" class="item-row">
+            <view wx:if="{{editingId === item.id}}" class="edit-row">
+              <input class="edit-input" value="{{editTitle}}" bindinput="onEditTitleInput" />
+              <input class="edit-input-num" type="number" value="{{editValue}}" bindinput="onEditValueInput" />
+              <view class="edit-actions">
+                <view class="edit-btn edit-btn-save" bindtap="saveEdit" data-id="{{item.id}}">✓</view>
+                <view class="edit-btn edit-btn-cancel" bindtap="cancelEdit">✕</view>
+              </view>
+            </view>
+            <view wx:else class="item-row-inner" bindtap="startEdit" data-id="{{item.id}}" data-title="{{item.title}}" data-value="{{item.cost}}" data-icon="{{item.icon}}" data-type="reward">
+              <view class="item-row-left">
+                <text class="item-icon">{{item.icon}}</text>
+                <text class="item-name">{{item.title}}</text>
+                <text class="tag tag-spend">{{item.cost}}⭐</text>
+              </view>
+              <view class="delete-btn" data-id="{{item.id}}" data-type="reward" catchtap="deleteItem">
+                <text class="delete-icon">✕</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 模态框 -->
+  <view wx:if="{{showModal}}" class="modal-overlay" catchtouchmove="preventMove">
+    <view class="modal-sheet animate-bounce-in">
+      <view class="modal-handle"></view>
+      <text class="modal-emoji">⚠️</text>
+      <text class="modal-title {{modalIsDanger ? 'modal-title-danger' : ''}}">{{modalTitle}}</text>
+      <text class="modal-desc">{{modalMessage}}</text>
+      <view class="modal-btns">
+        <view class="modal-btn-cancel" bindtap="handleModalCancel">
+          <text>{{modalCancelText}}</text>
+        </view>
+        <view class="modal-btn-ok {{modalIsDanger ? 'modal-btn-danger' : 'modal-btn-primary'}}" bindtap="handleModalConfirm">
+          <text>{{modalConfirmText}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 通知 -->
+  <view wx:if="{{notification}}" class="toast-wrap {{notification.type === 'error' ? 'toast-error' : 'toast-success'}}">
+    <text class="toast-icon">{{notification.type === 'error' ? '✕' : '✓'}}</text>
+    <text class="toast-text">{{notification.msg}}</text>
+  </view>
+</view>

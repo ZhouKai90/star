@@ -1,0 +1,65 @@
+<view class="page">
+  <view class="header-area-sm" style="padding-top:{{headerTopPadding}}rpx">
+    <view class="page-header-inner">
+      <view class="page-header-back" bindtap="goBack">
+        <text class="page-header-back-icon">‹</text>
+      </view>
+      <text class="page-header-title" style="color:#FFF;">数据管理</text>
+      <view class="page-header-actions"></view>
+    </view>
+  </view>
+
+  <view class="page-content" style="margin-top:24rpx;">
+    <view class="data-card">
+      <!-- 手动调整星星 -->
+      <view class="data-row">
+        <view class="data-row-left">
+          <view class="data-icon data-icon-star">⭐</view>
+          <text class="data-row-title">手动调整星星</text>
+        </view>
+        <view class="data-row-right">
+          <input class="data-input" type="number" placeholder="当前: {{stars}}" value="{{manualStars}}" bindinput="onManualStarsInput" />
+          <view class="data-sm-btn" bindtap="handleManualSetStars">修改</view>
+        </view>
+      </view>
+
+      <view class="data-divider"></view>
+
+      <!-- 重置数据 -->
+      <view class="data-row data-row-danger" bindtap="handleResetData">
+        <view class="data-row-left">
+          <view class="data-icon data-icon-warn">⚠️</view>
+          <view class="data-row-info">
+            <text class="data-row-title data-row-title-danger">重置所有数据</text>
+            <text class="data-row-desc">清空星星和历史记录，项目列表保留</text>
+          </view>
+        </view>
+        <text class="data-arrow">›</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 模态框 -->
+  <view wx:if="{{showModal}}" class="modal-overlay" catchtouchmove="preventMove">
+    <view class="modal-sheet animate-bounce-in">
+      <view class="modal-handle"></view>
+      <text class="modal-emoji">⚠️</text>
+      <text class="modal-title {{modalIsDanger ? 'modal-title-danger' : ''}}">{{modalTitle}}</text>
+      <text class="modal-desc">{{modalMessage}}</text>
+      <view class="modal-btns">
+        <view class="modal-btn-cancel" bindtap="handleModalCancel">
+          <text>{{modalCancelText}}</text>
+        </view>
+        <view class="modal-btn-ok {{modalIsDanger ? 'modal-btn-danger' : 'modal-btn-primary'}}" bindtap="handleModalConfirm">
+          <text>{{modalConfirmText}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 通知 -->
+  <view wx:if="{{notification}}" class="toast-wrap {{notification.type === 'error' ? 'toast-error' : 'toast-success'}}">
+    <text class="toast-icon">{{notification.type === 'error' ? '✕' : '✓'}}</text>
+    <text class="toast-text">{{notification.msg}}</text>
+  </view>
+</view>

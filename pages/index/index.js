@@ -5,7 +5,8 @@ Page({
   data: {
     stars: 0,
     activeTab: 'earn',
-    todayLabel: '',
+    dateLabel: '',
+    canGoForward: false,
     showConfetti: false,
 
     displayTasks: [],
@@ -32,10 +33,12 @@ Page({
 
     headerTopPadding: 80,
     headerRightPadding: 40,
+    dotsTop: 80,
   },
 
   onLoad() {
-    this.updateTodayLabel();
+    this.selectedDate = new Date();
+    this.updateDateDisplay();
     this.refreshData();
     this.calcSafePadding();
   },
@@ -48,9 +51,11 @@ Page({
       const px2rpx = (px) => Math.ceil(px * 750 / winW);
       const topRpx = px2rpx(sysInfo.statusBarHeight + 10);
       const rightRpx = px2rpx(winW - menuButton.left + 16);
+      const dotsTopRpx = px2rpx(sysInfo.statusBarHeight + 8);
       this.setData({
         headerTopPadding: topRpx,
         headerRightPadding: rightRpx,
+        dotsTop: dotsTopRpx,
       });
     } catch (e) {}
   },
@@ -59,21 +64,38 @@ Page({
     this.refreshData();
   },
 
-  updateTodayLabel() {
-    const now = new Date();
+  updateDateDisplay() {
+    const d = this.selectedDate;
+    const today = new Date();
     const weekdayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-    const month = now.getMonth() + 1;
-    const day = now.getDate();
-    const weekday = weekdayNames[now.getDay()];
-    this.setData({ todayLabel: `今天 · ${month}月${day}日 · ${weekday}` });
+    const month = d.getMonth() + 1;
+    const day = d.getDate();
+    const weekday = weekdayNames[d.getDay()];
+    const isToday = d.toDateString() === today.toDateString();
+    this.setData({
+      dateLabel: isToday ? `今天 · ${month}月${day}日 · ${weekday}` : `${month}月${day}日 · ${weekday}`,
+      canGoForward: !isToday,
+    });
+  },
+
+  prevDay() {
+    this.selectedDate.setDate(this.selectedDate.getDate() - 1);
+    this.updateDateDisplay();
+    this.refreshData();
+  },
+
+  nextDay() {
+    if (!this.data.canGoForward) return;
+    this.selectedDate.setDate(this.selectedDate.getDate() + 1);
+    this.updateDateDisplay();
+    this.refreshData();
   },
 
   refreshData() {
     const gd = app.globalData;
-    const today = new Date();
     this.setData({
       stars: gd.stars,
-      displayTasks: this.buildTasks(gd, today),
+      displayTasks: this.buildTasks(gd, this.selectedDate),
       displayBadHabits: this.buildBadHabits(gd),
       displayRewards: this.buildRewards(gd),
     });
@@ -110,6 +132,14 @@ Page({
     wx.navigateTo({ url: '/pages/manage/manage' });
   },
 
+  goToHistory() {
+    const d = this.selectedDate;
+    const y = d.getFullYear();
+    const m = d.getMonth() + 1;
+    const day = d.getDate();
+    wx.navigateTo({ url: `/pages/history/history?y=${y}&m=${m}&d=${day}` });
+  },
+
   onEarnReasonInput(e) { this.setData({ customEarnReason: e.detail.value }); },
   onEarnValueInput(e) { this.setData({ customEarnValue: e.detail.value }); },
   onDeductReasonInput(e) { this.setData({ customDeductReason: e.detail.value }); },
@@ -141,13 +171,12 @@ Page({
   handleRevokeEarn(e) {
     const taskTitle = e.currentTarget.dataset.title;
     const taskValue = parseInt(e.currentTarget.dataset.value, 10);
-    const today = new Date();
 
     const gd = app.globalData;
     const recordToDelete = gd.history.find(item =>
       item.title === taskTitle &&
       item.type === 'earn' &&
-      util.isSameDay(new Date(item.date), today)
+      util.isSameDay(new Date(item.date), this.selectedDate)
     );
     if (!recordToDelete) return;
 
@@ -254,7 +283,7 @@ Page({
     gd.stars -= amount;
     gd.history.unshift({
       id: Date.now(), title: reason, value: amount, type: 'spend',
-      date: new Date().toISOString(), icon: '🎁',
+      date: this.selectedDate.toISOString(), icon: '🎁',
     });
     app.saveData();
     this.setData({ customSpendReason: '', customSpendValue: '' });
@@ -268,11 +297,10 @@ Page({
 
     switch (modalActionType) {
       case 'earn': {
-        const now = new Date();
         gd.stars += modalActionData.value;
         gd.history.unshift({
           id: Date.now(), title: modalActionData.title, value: modalActionData.value,
-          type: 'earn', date: now.toISOString(), icon: modalActionData.icon,
+          type: 'earn', date: this.selectedDate.toISOString(), icon: modalActionData.icon,
         });
         app.saveData();
         this.showNotification(`太棒了！完成 "${modalActionData.title}" 获得 +${modalActionData.value} ⭐️`);
@@ -280,11 +308,10 @@ Page({
         break;
       }
       case 'customEarn': {
-        const nowCE = new Date();
         gd.stars += modalActionData.value;
         gd.history.unshift({
           id: Date.now(), title: modalActionData.title, value: modalActionData.value,
-          type: 'earn', date: nowCE.toISOString(), icon: '✨',
+          type: 'earn', date: this.selectedDate.toISOString(), icon: '✨',
         });
         app.saveData();
         this.setData({ customEarnReason: '', customEarnValue: '' });
@@ -296,7 +323,7 @@ Page({
         gd.stars = Math.max(0, gd.stars - modalActionData.value);
         gd.history.unshift({
           id: Date.now(), title: modalActionData.title, value: modalActionData.value,
-          type: 'deduct', date: new Date().toISOString(), icon: '❌',
+          type: 'deduct', date: this.selectedDate.toISOString(), icon: '❌',
         });
         app.saveData();
         this.showNotification(`扣星成功！因 "${modalActionData.title}" 扣除 ${modalActionData.value} 颗星。`, 'error');
@@ -306,7 +333,7 @@ Page({
         gd.stars -= modalActionData.cost;
         gd.history.unshift({
           id: Date.now(), title: modalActionData.title, value: modalActionData.cost,
-          type: 'spend', date: new Date().toISOString(), icon: '🎁',
+          type: 'spend', date: this.selectedDate.toISOString(), icon: '🎁',
         });
         app.saveData();
         this.showNotification(`兑换成功！享受你的 "${modalActionData.title}" 吧！`);
@@ -323,7 +350,7 @@ Page({
         gd.stars = Math.max(0, gd.stars - modalActionData.value);
         gd.history.unshift({
           id: Date.now(), title: modalActionData.title, value: modalActionData.value,
-          type: 'deduct', date: new Date().toISOString(), icon: '📝',
+          type: 'deduct', date: this.selectedDate.toISOString(), icon: '📝',
         });
         app.saveData();
         this.setData({ customDeductReason: '', customDeductValue: '' });

@@ -1,229 +1,187 @@
 <view class="page">
-  <!-- 顶部星星展示区 -->
-  <view class="header-bg" style="padding-top:{{headerTopPadding}}rpx">
-    <view class="header-content">
-      <view class="header-top" style="padding-right:{{headerRightPadding}}rpx">
-        <text class="header-title">🌟 星星存钱罐</text>
-        <view class="icon-btn" bindtap="goToManage">
-          <text class="icon-btn-text">⚙️</text>
+
+  <view class="page-inner" style="padding-top:{{headerTopPadding}}rpx">
+
+    <!-- ===== 顶部储蓄罐卡片 ===== -->
+    <view class="header-card">
+      <image class="header-bg-image" src="../../images/banner.png" mode="widthFix"></image>
+      <view class="header-content">
+        <text class="header-title">星星储蓄罐</text>
+        <view class="header-setting" bindtap="goToManage">
+          <text class="header-setting-icon">•••</text>
         </view>
+        <text class="star-number {{showConfetti ? 'star-number-bounce' : ''}}">{{stars}}</text>
       </view>
-      <view class="star-display">
-        <text class="star-count {{showConfetti ? 'star-count-bounce' : ''}}">{{stars}}</text>
-        <text class="star-icon-emoji">⭐</text>
-      </view>
-      <text class="star-label">当前拥有的星星</text>
     </view>
-  </view>
 
-  <!-- 今天日期 -->
-  <view class="today-bar">
-    <text class="today-label">{{todayLabel}}</text>
-  </view>
-
-  <!-- 导航栏 -->
-  <view class="tab-nav-wrap">
-    <view class="tab-nav-inner">
-      <view
-        class="tab-btn {{activeTab === 'earn' ? 'tab-btn-earn-active' : ''}}"
-        bindtap="switchTab"
-        data-tab="earn"
-      >
-        <text class="tab-btn-icon">✅</text>
-        <text>赚星星</text>
+    <!-- ===== 日期导航 ===== -->
+    <view class="date-bar-card">
+      <view class="date-btn" bindtap="prevDay">
+        <text class="date-arrow">‹</text>
       </view>
+      <text class="date-label" bindtap="goToHistory">{{dateLabel}}</text>
+      <view class="date-btn {{canGoForward ? '' : 'date-btn-disabled'}}" bindtap="nextDay">
+        <text class="date-arrow">›</text>
+      </view>
+    </view>
+
+    <!-- ===== 三标签导航 ===== -->
+    <view class="tab-bar-card">
       <view
-        class="tab-btn {{activeTab === 'deduct' ? 'tab-btn-deduct-active' : ''}}"
-        bindtap="switchTab"
-        data-tab="deduct"
+        class="tab-segment {{activeTab === 'earn' ? 'tab-segment-earn-active' : ''}}"
+        bindtap="switchTab" data-tab="earn"
       >
-        <text class="tab-btn-icon">❌</text>
-        <text>扣星星</text>
+        <text class="tab-segment-emoji">⭐</text>
+        <text class="tab-segment-label">赚星星</text>
       </view>
       <view
-        class="tab-btn {{activeTab === 'spend' ? 'tab-btn-spend-active' : ''}}"
-        bindtap="switchTab"
-        data-tab="spend"
+        class="tab-segment {{activeTab === 'deduct' ? 'tab-segment-deduct-active' : ''}}"
+        bindtap="switchTab" data-tab="deduct"
       >
-        <text class="tab-btn-icon">🎁</text>
-        <text>换礼物</text>
+        <text class="tab-segment-emoji tab-emoji-deduct">✕</text>
+        <text class="tab-segment-label">扣星星</text>
       </view>
-    </view>
-  </view>
-
-  <!-- 内容区域 -->
-  <view class="content-area">
-
-    <!-- ===== 赚星星 ===== -->
-    <view wx:if="{{activeTab === 'earn'}}" class="animate-fade-in">
-      <view class="custom-form">
-        <text class="form-label">自定义奖励</text>
-        <view class="form-row">
-          <input
-            class="form-input flex-1"
-            placeholder="输入奖励理由（例如：主动帮忙）"
-            value="{{customEarnReason}}"
-            bindinput="onEarnReasonInput"
-          />
-          <input
-            class="form-input form-input-num"
-            type="number"
-            placeholder="星数"
-            value="{{customEarnValue}}"
-            bindinput="onEarnValueInput"
-          />
-          <view class="form-btn form-btn-earn" bindtap="handleCustomEarn">
-            <text>+添加</text>
-          </view>
-        </view>
-      </view>
-      <view wx:if="{{displayTasks.length === 0}}" class="empty-state">
-        <text>还没有任务哦，去设置里添加吧！</text>
-      </view>
-      <view wx:for="{{displayTasks}}" wx:key="id" class="item-card {{item.isDisabled ? 'item-card-done' : 'item-card-clickable'}}">
-        <view class="item-card-inner" bindtap="handleEarnStar" data-id="{{item.id}}">
-          <view class="item-left">
-            <view class="item-icon {{item.isDisabled ? 'item-icon-done' : 'item-icon-earn'}}">{{item.icon}}</view>
-            <view class="item-info">
-              <text class="item-title {{item.isDisabled ? 'item-title-done' : ''}}">{{item.title}}</text>
-              <text class="item-status {{item.isDisabled ? 'item-status-done' : ''}}">{{item.statusText}}</text>
-            </view>
-          </view>
-          <view class="item-right">
-            <view class="item-value item-value-earn">
-              <text>+{{item.value}}</text>
-              <text class="star-small">⭐</text>
-            </view>
-            <view
-              wx:if="{{item.isCompleted}}"
-              class="revoke-btn"
-              catchtap="handleRevokeEarn"
-              data-id="{{item.id}}"
-              data-title="{{item.title}}"
-              data-value="{{item.value}}"
-            >
-              <text class="revoke-icon">↩</text>
-            </view>
-          </view>
-        </view>
+      <view class="tab-segment-divider"></view>
+      <view
+        class="tab-segment {{activeTab === 'spend' ? 'tab-segment-spend-active' : ''}}"
+        bindtap="switchTab" data-tab="spend"
+      >
+        <text class="tab-segment-emoji">🎁</text>
+        <text class="tab-segment-label">换礼物</text>
       </view>
     </view>
 
-    <!-- ===== 扣星星 ===== -->
-    <view wx:elif="{{activeTab === 'deduct'}}" class="animate-fade-in">
-      <view class="custom-form">
-        <text class="form-label">自定义扣星</text>
-        <view class="form-row">
-          <input
-            class="form-input flex-1"
-            placeholder="输入扣星理由（例如：顶嘴）"
-            value="{{customDeductReason}}"
-            bindinput="onDeductReasonInput"
-          />
-          <input
-            class="form-input form-input-num"
-            type="number"
-            placeholder="星数"
-            value="{{customDeductValue}}"
-            bindinput="onDeductValueInput"
-          />
-          <view class="form-btn form-btn-deduct" bindtap="handleCustomDeduct">
-            <text>-添加</text>
-          </view>
-        </view>
-      </view>
-      <view wx:if="{{displayBadHabits.length === 0}}" class="empty-state">
-        <text>还没有坏习惯选项哦，去设置里添加吧！</text>
-      </view>
-      <view wx:for="{{displayBadHabits}}" wx:key="id" class="item-card item-card-clickable">
-        <view class="item-card-inner" bindtap="handleDeductStar" data-id="{{item.id}}" data-title="{{item.title}}" data-value="{{item.value}}">
-          <view class="item-left">
-            <view class="item-icon item-icon-deduct">{{item.icon}}</view>
-            <view class="item-info">
-              <text class="item-title">{{item.title}}</text>
-              <text class="item-status {{item.goesNegative ? 'item-status-negative' : ''}}">
-                <text wx:if="{{item.goesNegative}}">星星将变为负数 (剩余 {{item.nextStars}})</text>
-                <text wx:else>扣星后剩余 {{item.nextStars}} 颗</text>
-              </text>
-            </view>
-          </view>
-          <view class="item-value item-value-deduct">
-            <text>-{{item.value}}</text>
-            <text class="star-small">⭐</text>
-          </view>
-        </view>
-      </view>
-    </view>
+    <!-- ===== 内容区域 ===== -->
+    <view class="content-wrap">
 
-    <!-- ===== 换礼物 ===== -->
-    <view wx:else class="animate-fade-in">
-      <view class="custom-form">
-        <text class="form-label">自定义兑换</text>
-        <view class="form-row">
-          <input
-            class="form-input flex-1"
-            placeholder="输入兑换理由（例如：买贴纸）"
-            value="{{customSpendReason}}"
-            bindinput="onSpendReasonInput"
-          />
-          <input
-            class="form-input form-input-num"
-            type="number"
-            placeholder="星数"
-            value="{{customSpendValue}}"
-            bindinput="onSpendValueInput"
-          />
-          <view class="form-btn form-btn-spend" bindtap="handleCustomSpend">
-            <text>兑换</text>
+      <!-- ===== 赚星星 Tab ===== -->
+      <view wx:if="{{activeTab === 'earn'}}" class="scale-in">
+        <view class="custom-card">
+          <text class="custom-card-title">自定义奖励</text>
+          <view class="custom-row">
+            <input class="custom-input flex-1" placeholder="输入奖励理由 (例如：主动帮忙)" value="{{customEarnReason}}" bindinput="onEarnReasonInput" />
+            <input class="custom-input custom-input-num" type="number" placeholder="星数" value="{{customEarnValue}}" bindinput="onEarnValueInput" />
+            <view class="custom-btn earn-btn" bindtap="handleCustomEarn">
+              <text>+ 添加</text>
+            </view>
+          </view>
+        </view>
+
+        <view wx:if="{{displayTasks.length === 0}}" class="empty-state">
+          <text class="empty-state-icon">📋</text>
+          <text class="empty-state-text">还没有任务哦，去设置里添加吧！</text>
+        </view>
+        <view wx:else class="task-list-card">
+          <view wx:for="{{displayTasks}}" wx:key="id" class="task-item animate-fade-in" style="animation-delay:{{index * 0.05}}s">
+            <view class="task-item-inner" bindtap="handleEarnStar" data-id="{{item.id}}">
+              <view class="item-left">
+                <view class="item-icon-wrap icon-wrap-earn">{{item.icon}}</view>
+                <view class="item-info">
+                  <text class="item-title {{item.isCompleted ? 'item-title-done' : ''}}">{{item.title}}</text>
+                  <text class="item-sub {{item.isCompleted ? 'item-sub-done' : ''}}">{{item.statusText}}</text>
+                </view>
+              </view>
+              <view class="item-right">
+                <view class="value-badge value-badge-earn">+{{item.value}} ⭐</view>
+                <view wx:if="{{item.isCompleted}}" class="revoke-btn" catchtap="handleRevokeEarn" data-id="{{item.id}}" data-title="{{item.title}}" data-value="{{item.value}}">
+                  <text class="revoke-icon">↩</text>
+                </view>
+              </view>
+            </view>
           </view>
         </view>
       </view>
-      <view wx:if="{{displayRewards.length === 0}}" class="empty-state">
-        <text>还没有奖励哦，去设置里添加吧！</text>
-      </view>
-      <view wx:for="{{displayRewards}}" wx:key="id" class="item-card {{item.canAfford ? 'item-card-clickable' : 'item-card-disabled'}}">
-        <view class="item-card-inner" bindtap="handleSpendStar" data-id="{{item.id}}" data-title="{{item.title}}" data-cost="{{item.cost}}">
-          <view class="item-left">
-            <view class="item-icon {{item.canAfford ? 'item-icon-spend' : 'item-icon-dim'}}">{{item.icon}}</view>
-            <view class="item-info">
-              <text class="item-title">{{item.title}}</text>
-              <text class="item-status">{{item.canAfford ? '点击兑换' : '星星还不够哦'}}</text>
+
+      <!-- ===== 扣星星 Tab ===== -->
+      <view wx:elif="{{activeTab === 'deduct'}}" class="scale-in">
+        <view class="custom-card">
+          <text class="custom-card-title">自定义扣星</text>
+          <view class="custom-row">
+            <input class="custom-input flex-1" placeholder="输入扣星理由 (例如：乱发脾气)" value="{{customDeductReason}}" bindinput="onDeductReasonInput" />
+            <input class="custom-input custom-input-num" type="number" placeholder="星数" value="{{customDeductValue}}" bindinput="onDeductValueInput" />
+            <view class="custom-btn deduct-btn" bindtap="handleCustomDeduct">
+              <text>- 扣星</text>
             </view>
           </view>
-          <view class="item-value {{item.canAfford ? 'item-value-spend' : 'item-value-dim'}}">
-            <text>-{{item.cost}}</text>
-            <text class="star-small">⭐</text>
+        </view>
+        <view wx:if="{{displayBadHabits.length === 0}}" class="empty-state">
+          <text class="empty-state-icon">😅</text>
+          <text class="empty-state-text">还没有坏习惯选项哦，去设置里添加吧！</text>
+        </view>
+        <view wx:else class="task-list-card">
+          <view wx:for="{{displayBadHabits}}" wx:key="id" class="task-item animate-fade-in" style="animation-delay:{{index * 0.05}}s">
+            <view class="task-item-inner" bindtap="handleDeductStar" data-id="{{item.id}}" data-title="{{item.title}}" data-value="{{item.value}}">
+              <view class="item-left">
+                <view class="item-icon-wrap icon-wrap-deduct">{{item.icon}}</view>
+                <view class="item-info">
+                  <text class="item-title">{{item.title}}</text>
+                  <text class="item-sub {{item.goesNegative ? 'item-sub-warn' : ''}}">
+                    <text wx:if="{{item.goesNegative}}">⚠️ 星星将不够扣</text>
+                    <text wx:else>扣后剩余 {{item.nextStars}} 颗</text>
+                  </text>
+                </view>
+              </view>
+              <view class="value-badge value-badge-deduct">-{{item.value}} ⭐</view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- ===== 换礼物 Tab ===== -->
+      <view wx:else class="scale-in">
+        <view class="custom-card">
+          <text class="custom-card-title">自定义兑换</text>
+          <view class="custom-row">
+            <input class="custom-input flex-1" placeholder="输入兑换理由 (例如：看动画)" value="{{customSpendReason}}" bindinput="onSpendReasonInput" />
+            <input class="custom-input custom-input-num" type="number" placeholder="星数" value="{{customSpendValue}}" bindinput="onSpendValueInput" />
+            <view class="custom-btn spend-btn" bindtap="handleCustomSpend">
+              <text>兑换</text>
+            </view>
+          </view>
+        </view>
+        <view wx:if="{{displayRewards.length === 0}}" class="empty-state">
+          <text class="empty-state-icon">🎀</text>
+          <text class="empty-state-text">还没有奖励哦，去设置里添加吧！</text>
+        </view>
+        <view wx:else class="task-list-card">
+          <view wx:for="{{displayRewards}}" wx:key="id" class="task-item animate-fade-in" style="animation-delay:{{index * 0.05}}s">
+            <view class="task-item-inner {{item.canAfford ? '' : 'item-disabled'}}" bindtap="handleSpendStar" data-id="{{item.id}}" data-title="{{item.title}}" data-cost="{{item.cost}}">
+              <view class="item-left">
+                <view class="item-icon-wrap {{item.canAfford ? 'icon-wrap-spend' : 'icon-wrap-dim'}}">{{item.icon}}</view>
+                <view class="item-info">
+                  <text class="item-title {{item.canAfford ? '' : 'item-title-dim'}}">{{item.title}}</text>
+                  <text class="item-sub {{item.canAfford ? '' : 'item-sub-dim'}}">{{item.canAfford ? '点击兑换' : '星星还不够哦'}}</text>
+                </view>
+              </view>
+              <view class="value-badge {{item.canAfford ? 'value-badge-spend' : 'value-badge-dim'}}">{{item.cost}} ⭐</view>
+            </view>
           </view>
         </view>
       </view>
     </view>
   </view>
 
-  <!-- 模态框 -->
+  <!-- ===== 模态框 ===== -->
   <view wx:if="{{showModal}}" class="modal-overlay" catchtouchmove="preventMove">
-    <view class="modal-box animate-bounce-in">
-      <view class="modal-header">
-        <text wx:if="{{modalIsDanger}}" class="modal-warn-emoji">⚠️</text>
-        <text class="modal-title {{modalIsDanger ? 'modal-title-danger' : ''}}">{{modalTitle}}</text>
-      </view>
-      <text class="modal-message">{{modalMessage}}</text>
-      <view class="modal-actions">
-        <view class="modal-btn modal-btn-cancel" bindtap="handleModalCancel">
+    <view class="modal-sheet animate-bounce-in">
+      <view class="modal-handle"></view>
+      <text class="modal-emoji">{{modalIsDanger ? '⚠️' : (modalActionType === 'earn' || modalActionType === 'customEarn' ? '⭐' : '🎉')}}</text>
+      <text class="modal-title {{modalIsDanger ? 'modal-title-danger' : ''}}">{{modalTitle}}</text>
+      <text class="modal-desc">{{modalMessage}}</text>
+      <view class="modal-btns">
+        <view class="modal-btn-cancel" bindtap="handleModalCancel">
           <text>{{modalCancelText}}</text>
         </view>
-        <view class="modal-btn {{modalIsDanger ? 'modal-btn-danger' : 'modal-btn-confirm'}}" bindtap="handleModalConfirm">
+        <view class="modal-btn-ok {{modalIsDanger ? 'modal-btn-danger' : 'modal-btn-primary'}}" bindtap="handleModalConfirm">
           <text>{{modalConfirmText}}</text>
         </view>
       </view>
     </view>
   </view>
 
-  <!-- 通知 -->
-  <view wx:if="{{notification}}" class="notification {{notification.type === 'error' ? 'notification-error' : 'notification-success'}}">
-    <text class="notification-icon">{{notification.type === 'error' ? '✕' : '✓'}}</text>
-    <text class="notification-text">{{notification.msg}}</text>
+  <!-- ===== 底部通知 ===== -->
+  <view wx:if="{{notification}}" class="toast-wrap {{notification.type === 'error' ? 'toast-error' : 'toast-success'}}">
+    <text class="toast-icon">{{notification.type === 'error' ? '✕' : '✓'}}</text>
+    <text class="toast-text">{{notification.msg}}</text>
   </view>
-
-  <!-- 星星闪烁动画层 -->
-  <view wx:if="{{showConfetti}}" class="confetti-layer"></view>
 </view>

@@ -1,218 +1,52 @@
 <view class="page">
-  <!-- 顶部导航栏 -->
-  <view class="nav-header">
-    <view class="nav-inner">
-      <view class="nav-back" bindtap="goBack">
-        <text class="nav-back-arrow">‹</text>
+  <view class="header-area-sm" style="padding-top:{{headerTopPadding}}rpx">
+    <view class="page-header-inner">
+      <view class="page-header-back" bindtap="goBack">
+        <text class="page-header-back-icon">‹</text>
       </view>
-      <text class="nav-title">设置</text>
-      <view class="nav-placeholder"></view>
+      <text class="page-header-title" style="color:#FFF;">设置</text>
+      <view class="page-header-actions"></view>
     </view>
   </view>
 
-  <view class="content-area">
-
-    <!-- ===== 第一部分：项目管理 ===== -->
-    <view class="manage-section">
-      <view class="manage-section-header">
-        <text class="manage-section-title">项目管理</text>
-        <text class="badge {{newItemType === 'task' ? 'badge-blue' : newItemType === 'badHabit' ? 'badge-red' : 'badge-pink'}}">
-          {{newItemType === 'task' ? '任务' : newItemType === 'badHabit' ? '坏习惯' : '奖励'}}
-        </text>
-      </view>
-
-      <!-- 分类切换标签 -->
-      <view class="type-tabs">
-        <view class="type-tab {{newItemType === 'task' ? 'type-tab-active type-tab-active-blue' : ''}}" bindtap="setType" data-type="task">任务</view>
-        <view class="type-tab {{newItemType === 'badHabit' ? 'type-tab-active type-tab-active-red' : ''}}" bindtap="setType" data-type="badHabit">坏习惯</view>
-        <view class="type-tab {{newItemType === 'reward' ? 'type-tab-active type-tab-active-pink' : ''}}" bindtap="setType" data-type="reward">奖励</view>
-      </view>
-
-      <!-- 添加项目（紧凑横排） -->
-      <view class="add-bar">
-        <input
-          class="add-bar-input"
-          placeholder="{{newItemType === 'task' ? '任务名称' : newItemType === 'reward' ? '奖励名称' : '习惯名称'}}"
-          value="{{newItemTitle}}"
-          bindinput="onTitleInput"
-        />
-        <input
-          class="add-bar-num"
-          type="number"
-          placeholder="{{newItemType === 'reward' ? '花费' : '星数'}}"
-          value="{{newItemValue}}"
-          bindinput="onValueInput"
-        />
-        <picker class="add-bar-icon" mode="selector" range="{{iconList}}" value="{{iconIndex}}" bindchange="onIconChange">
-          <view class="add-bar-icon-value">{{newItemIcon}}</view>
-        </picker>
-        <view class="add-bar-btn {{newItemType === 'task' ? 'btn-blue' : newItemType === 'badHabit' ? 'btn-red' : 'btn-pink'}}" bindtap="handleAddItem">
-          <text>+</text>
+  <view class="page-content" style="margin-top:32rpx;">
+    <view class="hub-card" bindtap="goToItems">
+      <view class="hub-card-left">
+        <view class="hub-icon hub-icon-blue">
+          <text>📋</text>
+        </view>
+        <view class="hub-card-info">
+          <text class="hub-card-title">项目管理</text>
+          <text class="hub-card-desc">管理任务、坏习惯和奖励项目</text>
         </view>
       </view>
-
-      <!-- 项目列表 -->
-      <view class="item-list">
-        <!-- 任务列表 -->
-        <view wx:if="{{newItemType === 'task'}}">
-          <text class="list-empty" wx:if="{{tasks.length === 0}}">暂无任务项目</text>
-          <view wx:for="{{tasks}}" wx:key="id" class="item-row">
-            <view wx:if="{{editingId === item.id}}" class="edit-row">
-              <text class="item-icon">{{item.icon}}</text>
-              <input class="edit-input" value="{{editTitle}}" bindinput="onEditTitleInput" />
-              <input class="edit-input-num" type="number" value="{{editValue}}" bindinput="onEditValueInput" />
-              <view class="edit-actions">
-                <view class="edit-btn edit-btn-save" bindtap="saveEdit" data-id="{{item.id}}">✓</view>
-                <view class="edit-btn edit-btn-cancel" bindtap="cancelEdit">✕</view>
-              </view>
-            </view>
-            <view wx:else class="item-row-inner" bindtap="startEdit" data-id="{{item.id}}" data-title="{{item.title}}" data-value="{{item.value}}" data-icon="{{item.icon}}" data-type="task">
-              <view class="item-row-left">
-                <text class="item-icon">{{item.icon}}</text>
-                <text class="item-name">{{item.title}}</text>
-                <text class="item-tag tag-earn">+{{item.value}}</text>
-              </view>
-              <view class="item-row-actions">
-              <view class="action-btn" data-id="{{item.id}}" data-type="task" catchtap="deleteItem">
-                <text class="action-icon">🗑</text>
-              </view>
-              </view>
-            </view>
-          </view>
-        </view>
-
-        <!-- 坏习惯列表 -->
-        <view wx:elif="{{newItemType === 'badHabit'}}">
-          <text class="list-empty" wx:if="{{badHabits.length === 0}}">暂无坏习惯项目</text>
-          <view wx:for="{{badHabits}}" wx:key="id" class="item-row">
-            <view wx:if="{{editingId === item.id}}" class="edit-row">
-              <text class="item-icon">{{item.icon}}</text>
-              <input class="edit-input" value="{{editTitle}}" bindinput="onEditTitleInput" />
-              <input class="edit-input-num" type="number" value="{{editValue}}" bindinput="onEditValueInput" />
-              <view class="edit-actions">
-                <view class="edit-btn edit-btn-save" bindtap="saveEdit" data-id="{{item.id}}">✓</view>
-                <view class="edit-btn edit-btn-cancel" bindtap="cancelEdit">✕</view>
-              </view>
-            </view>
-            <view wx:else class="item-row-inner" bindtap="startEdit" data-id="{{item.id}}" data-title="{{item.title}}" data-value="{{item.value}}" data-icon="{{item.icon}}" data-type="badHabit">
-              <view class="item-row-left">
-                <text class="item-icon">{{item.icon}}</text>
-                <text class="item-name">{{item.title}}</text>
-                <text class="item-tag tag-deduct">-{{item.value}}</text>
-              </view>
-              <view class="item-row-actions">
-                <view class="action-btn" data-id="{{item.id}}" data-type="badHabit" catchtap="deleteItem">
-                  <text class="action-icon">🗑</text>
-                </view>
-              </view>
-            </view>
-          </view>
-        </view>
-
-        <!-- 奖励列表 -->
-        <view wx:else>
-          <text class="list-empty" wx:if="{{rewards.length === 0}}">暂无奖励项目</text>
-          <view wx:for="{{rewards}}" wx:key="id" class="item-row">
-            <view wx:if="{{editingId === item.id}}" class="edit-row">
-              <text class="item-icon">{{item.icon}}</text>
-              <input class="edit-input" value="{{editTitle}}" bindinput="onEditTitleInput" />
-              <input class="edit-input-num" type="number" value="{{editValue}}" bindinput="onEditValueInput" />
-              <view class="edit-actions">
-                <view class="edit-btn edit-btn-save" bindtap="saveEdit" data-id="{{item.id}}">✓</view>
-                <view class="edit-btn edit-btn-cancel" bindtap="cancelEdit">✕</view>
-              </view>
-            </view>
-            <view wx:else class="item-row-inner" bindtap="startEdit" data-id="{{item.id}}" data-title="{{item.title}}" data-value="{{item.cost}}" data-icon="{{item.icon}}" data-type="reward">
-              <view class="item-row-left">
-                <text class="item-icon">{{item.icon}}</text>
-                <text class="item-name">{{item.title}}</text>
-                <text class="item-tag tag-spend">-{{item.cost}}</text>
-              </view>
-              <view class="item-row-actions">
-                <view class="action-btn" data-id="{{item.id}}" data-type="reward" catchtap="deleteItem">
-                  <text class="action-icon">🗑</text>
-                </view>
-              </view>
-            </view>
-          </view>
-        </view>
-      </view>
+      <text class="hub-arrow">›</text>
     </view>
 
-    <!-- ===== 第二部分：数据管理 ===== -->
-    <view class="manage-section">
-      <view class="manage-section-header">
-        <text class="manage-section-title">数据管理</text>
-      </view>
-
-      <!-- 历史记录 -->
-      <view class="menu-row" bindtap="goToHistory">
-        <view class="menu-row-left">
-          <text class="menu-icon menu-icon-blue">📋</text>
-          <view class="menu-row-info">
-            <text class="menu-row-title">历史记录</text>
-            <text class="menu-row-desc">查看所有星星收支记录</text>
-          </view>
+    <view class="hub-card" bindtap="goToHistory">
+      <view class="hub-card-left">
+        <view class="hub-icon hub-icon-green">
+          <text>📜</text>
         </view>
-        <text class="menu-arrow">›</text>
-      </view>
-
-      <view class="menu-divider"></view>
-
-      <!-- 手动调整星星 -->
-      <view class="menu-row">
-        <view class="menu-row-left">
-          <text class="menu-icon menu-icon-yellow">⭐</text>
-          <text class="menu-row-title">手动调整星星</text>
-        </view>
-        <view class="menu-row-right">
-          <input
-            class="menu-input-num"
-            type="number"
-            placeholder="当前: {{stars}}"
-            value="{{manualStars}}"
-            bindinput="onManualStarsInput"
-          />
-          <view class="menu-sm-btn" bindtap="handleManualSetStars">修改</view>
+        <view class="hub-card-info">
+          <text class="hub-card-title">历史记录</text>
+          <text class="hub-card-desc">查看所有星星收支记录</text>
         </view>
       </view>
-
-      <view class="menu-divider"></view>
-
-      <!-- 重置数据 -->
-      <view class="menu-row menu-row-danger" bindtap="handleResetData">
-        <view class="menu-row-left">
-          <text class="menu-icon menu-icon-red">⚠️</text>
-          <text class="menu-row-title menu-row-title-danger">重置所有数据</text>
-        </view>
-        <text class="menu-arrow menu-arrow-danger">›</text>
-      </view>
+      <text class="hub-arrow">›</text>
     </view>
 
-  </view>
-
-  <!-- 模态框 -->
-  <view wx:if="{{showModal}}" class="modal-overlay" catchtouchmove="preventMove">
-    <view class="modal-box animate-bounce-in">
-      <view class="modal-header">
-        <text wx:if="{{modalIsDanger}}" class="modal-warn-emoji">⚠️</text>
-        <text class="modal-title {{modalIsDanger ? 'modal-title-danger' : ''}}">{{modalTitle}}</text>
-      </view>
-      <text class="modal-message">{{modalMessage}}</text>
-      <view class="modal-actions">
-        <view class="modal-btn modal-btn-cancel" bindtap="handleModalCancel">
-          <text>{{modalCancelText}}</text>
+    <view class="hub-card" bindtap="goToData">
+      <view class="hub-card-left">
+        <view class="hub-icon hub-icon-yellow">
+          <text>⚙️</text>
         </view>
-        <view class="modal-btn {{modalIsDanger ? 'modal-btn-danger' : 'modal-btn-confirm'}}" bindtap="handleModalConfirm">
-          <text>{{modalConfirmText}}</text>
+        <view class="hub-card-info">
+          <text class="hub-card-title">数据管理</text>
+          <text class="hub-card-desc">查看记录、调整星星、重置数据</text>
         </view>
       </view>
+      <text class="hub-arrow">›</text>
     </view>
-  </view>
-
-  <!-- 通知 -->
-  <view wx:if="{{notification}}" class="notification {{notification.type === 'error' ? 'notification-error' : 'notification-success'}}">
-    <text class="notification-icon">{{notification.type === 'error' ? '✕' : '✓'}}</text>
-    <text class="notification-text">{{notification.msg}}</text>
   </view>
 </view>

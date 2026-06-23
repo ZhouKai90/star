@@ -1,0 +1,72 @@
+.header-area-sm { background: linear-gradient(165deg, #FB923C, #F97316); padding: 0 32rpx 28rpx; }
+
+.page-content { padding: 32rpx; max-width: 580rpx; margin: 0 auto; }
+.item-section { background: #FFFFFF; border-radius: 28rpx; overflow: hidden; box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04); }
+.item-section-header { padding: 28rpx 28rpx 0; }
+.item-section-title { font-size: 30rpx; font-weight: 700; color: #292524; }
+
+.type-tabs { display: flex; gap: 6rpx; margin: 20rpx 28rpx 0; padding: 6rpx; background: #F5F5F4; border-radius: 14rpx; }
+.type-tab { flex: 1; padding: 14rpx 0; border-radius: 10rpx; font-size: 24rpx; font-weight: 600; text-align: center; color: #78716C; }
+.type-tab-earn { background: #FFFFFF; color: #D97706; box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04); }
+.type-tab-deduct { background: #FFFFFF; color: #DC2626; box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04); }
+.type-tab-spend { background: #FFFFFF; color: #DB2777; box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04); }
+
+.add-bar { display: flex; align-items: center; gap: 8rpx; margin: 16rpx 28rpx 0; padding: 12rpx 16rpx; background: #FAFAF9; border-radius: 16rpx; border: 2rpx solid #E7E5E4; }
+.add-icon-picker { flex-shrink: 0; }
+.add-icon-text { width: 60rpx; height: 60rpx; background: #FFFFFF; border-radius: 12rpx; border: 2rpx solid #E7E5E4; display: flex; align-items: center; justify-content: center; font-size: 28rpx; }
+.add-input { flex: 1; padding: 10rpx 0; font-size: 26rpx; color: #292524; min-width: 0; background: transparent; }
+.add-input::placeholder { color: #A8A29E; }
+.add-num { width: 110rpx; padding: 10rpx; font-size: 24rpx; color: #292524; text-align: center; background: #FFFFFF; border-radius: 10rpx; border: 2rpx solid #E7E5E4; }
+.add-btn { width: 60rpx; height: 60rpx; border-radius: 12rpx; display: flex; align-items: center; justify-content: center; font-size: 28rpx; font-weight: 700; color: #FFFFFF; flex-shrink: 0; }
+.add-btn:active { opacity: 0.8; }
+.btn-earn { background: linear-gradient(135deg, #F59E0B, #D97706); }
+.btn-deduct { background: linear-gradient(135deg, #EF4444, #DC2626); }
+.btn-spend { background: linear-gradient(135deg, #EC4899, #DB2777); }
+
+.item-list { margin-top: 16rpx; }
+.list-empty { display: block; padding: 40rpx 28rpx; text-align: center; font-size: 24rpx; color: #A8A29E; }
+.item-row { border-bottom: 2rpx solid #F5F5F4; }
+.item-row:last-child { border-bottom: none; }
+.item-row-inner { display: flex; align-items: center; justify-content: space-between; padding: 22rpx 28rpx; }
+.item-row-inner:active { background: #FAFAF9; }
+.item-row-left { display: flex; align-items: center; gap: 14rpx; flex: 1; min-width: 0; }
+.item-icon { font-size: 28rpx; width: 50rpx; text-align: center; flex-shrink: 0; }
+.item-name { font-size: 26rpx; font-weight: 500; color: #57534E; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tag { font-size: 20rpx; font-weight: 700; padding: 6rpx 14rpx; border-radius: 99rpx; flex-shrink: 0; }
+.tag-earn { background: #FFFBEB; color: #D97706; }
+.tag-deduct { background: #FEF2F2; color: #DC2626; }
+.tag-spend { background: #FDF2F8; color: #DB2777; }
+.delete-btn { width: 48rpx; height: 48rpx; display: flex; align-items: center; justify-content: center; margin-left: 8rpx; }
+.delete-btn:active { background: #F5F5F4; border-radius: 10rpx; }
+.delete-icon { font-size: 20rpx; color: #A8A29E; opacity: 0.5; }
+
+.edit-row { display: flex; align-items: center; gap: 8rpx; padding: 16rpx 28rpx; background: #FAFAF9; }
+.edit-input { flex: 1; padding: 12rpx; border: 2rpx solid #E7E5E4; border-radius: 10rpx; font-size: 24rpx; background: #FFFFFF; min-width: 0; }
+.edit-input-num { width: 96rpx; padding: 12rpx; border: 2rpx solid #E7E5E4; border-radius: 10rpx; font-size: 24rpx; background: #FFFFFF; text-align: center; }
+.edit-actions { display: flex; gap: 4rpx; }
+.edit-btn { width: 48rpx; height: 48rpx; display: flex; align-items: center; justify-content: center; border-radius: 10rpx; font-size: 22rpx; font-weight: 700; }
+.edit-btn-save { color: #16a34a; background: #F0FDF4; }
+.edit-btn-cancel { color: #A8A29E; background: #F5F5F4; }
+
+/* === Modal === */
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 999; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.5); }
+.modal-sheet { background: rgba(255,255,255,0.95); backdrop-filter: blur(24rpx); -webkit-backdrop-filter: blur(24rpx); border-radius: 32rpx; width: 85%; padding: 40rpx 32rpx 48rpx; text-align: center; box-shadow: 0 8rpx 40rpx rgba(0, 0, 0, 0.15); }
+.modal-handle { width: 48rpx; height: 6rpx; border-radius: 99rpx; background: #D6D3D1; margin: 0 auto 24rpx; }
+.modal-emoji { font-size: 56rpx; display: block; margin-bottom: 16rpx; }
+.modal-title { font-size: 32rpx; font-weight: 800; color: #292524; display: block; margin-bottom: 12rpx; }
+.modal-title-danger { color: #DC2626; }
+.modal-desc { font-size: 26rpx; color: #78716C; margin-bottom: 36rpx; line-height: 1.5; }
+.modal-btns { display: flex; gap: 16rpx; }
+.modal-btn-cancel { flex: 1; padding: 24rpx 0; border-radius: 16rpx; font-weight: 600; font-size: 26rpx; background: #F5F5F4; color: #57534E; text-align: center; }
+.modal-btn-cancel:active { background: #E7E5E4; }
+.modal-btn-ok { flex: 1; padding: 24rpx 0; border-radius: 16rpx; font-weight: 700; font-size: 26rpx; text-align: center; }
+.modal-btn-ok:active { opacity: 0.85; }
+.modal-btn-primary { background: linear-gradient(135deg, #F59E0B, #F97316); color: #FFFFFF; }
+.modal-btn-danger { background: linear-gradient(135deg, #EF4444, #DC2626); color: #FFFFFF; }
+
+.toast-wrap { position: fixed; bottom: 48rpx; left: 50%; transform: translateX(-50%); padding: 20rpx 36rpx; border-radius: 99999rpx; display: flex; align-items: center; gap: 12rpx; z-index: 999; box-shadow: 0 8rpx 32rpx rgba(0,0,0,0.15); animation: slideUp 0.3s ease-out forwards; }
+.toast-success { background: #292524; }
+.toast-error { background: #EF4444; }
+.toast-icon { font-size: 24rpx; color: #FFFFFF; }
+.toast-text { font-size: 24rpx; font-weight: 500; color: #FFFFFF; }
+@keyframes slideUp { from { opacity: 0; transform: translateX(-50%) translateY(20rpx); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }

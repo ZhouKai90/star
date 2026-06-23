@@ -1,58 +1,106 @@
 <view class="page">
-  <!-- 顶部导航栏 -->
-  <view class="nav-header">
-    <view class="nav-inner">
-      <view class="nav-back" bindtap="goBack">
-        <text class="nav-back-arrow">‹</text>
+  <view class="header-area-sm" style="padding-top:{{headerTopPadding}}rpx">
+    <view class="page-header-inner">
+      <view class="page-header-back" bindtap="goBack">
+        <text class="page-header-back-icon">‹</text>
       </view>
-      <text class="nav-title">记录</text>
-      <view class="nav-placeholder"></view>
+      <text class="page-header-title" style="color:#FFF;">历史记录</text>
+      <view class="page-header-actions">
+        <view wx:if="{{!isEmpty}}" class="nav-clear-btn" bindtap="handleClearHistory">
+          <text class="nav-clear-text">清空</text>
+        </view>
+      </view>
     </view>
   </view>
 
-  <view class="content-area">
-    <view class="section-header">
-      <text class="section-title">最近动态</text>
-      <view wx:if="{{history.length > 0}}" class="clear-btn" bindtap="handleClearHistory">
-        <text class="clear-text">清空记录</text>
+  <view class="page-content" style="margin-top:24rpx;">
+
+    <!-- 空状态 -->
+    <view wx:if="{{isEmpty}}" class="empty-state">
+      <text class="empty-state-icon">📜</text>
+      <text class="empty-state-text">还没有记录哦，快去赚星星吧！</text>
+    </view>
+
+    <!-- 日历 -->
+    <view wx:else class="cal-card animate-fade-in">
+      <!-- 月份导航 -->
+      <view class="month-nav">
+        <view class="month-btn" bindtap="prevMonth">‹</view>
+        <text class="month-title">{{monthLabel}}</text>
+        <view class="month-btn" bindtap="nextMonth">›</view>
+      </view>
+
+      <!-- 星期行 -->
+      <view class="week-row">
+        <view wx:for="{{weekdayHeaders}}" wx:key="index" class="week-cell">
+          <text class="week-text">{{item}}</text>
+        </view>
+      </view>
+
+      <!-- 日期网格 -->
+      <view class="cal-grid">
+        <view wx:for="{{calendarDays}}" wx:key="dateStr"
+          class="day-cell {{item.isCurrent ? '' : 'day-dim'}} {{item.isToday ? 'day-today' : ''}} {{item.hasRecord ? 'day-has-record' : ''}} {{item.dateStr === selectedDate ? 'day-selected' : ''}}"
+          bindtap="onSelectDay" data-date="{{item.dateStr}}">
+          <text class="day-num">{{item.day}}</text>
+        </view>
       </view>
     </view>
 
-    <view wx:if="{{history.length === 0}}" class="empty-box">
-      <text class="empty-text">还没有记录哦，快去赚星星吧！</text>
-    </view>
+    <!-- 选中日期的详情 -->
+    <view wx:if="{{selectedRecords.length > 0}}" class="detail-card animate-fade-in">
+      <view class="detail-top">
+        <text class="detail-title">{{selectedDayLabel}}</text>
+      </view>
 
-    <view wx:else class="history-list">
-      <view wx:for="{{history}}" wx:key="id" class="history-item">
-        <view class="history-left">
-          <view class="history-icon {{item.type === 'earn' ? 'history-icon-earn' : item.type === 'spend' ? 'history-icon-spend' : 'history-icon-deduct'}}">
-            <text>{{item.icon || (item.type === 'earn' ? '🌟' : item.type === 'spend' ? '🎁' : '❌')}}</text>
-          </view>
-          <view class="history-info">
-            <text class="history-title">{{item.title}}</text>
-            <text class="history-date">{{item.formattedDate}}</text>
-          </view>
+      <!-- 汇总 -->
+      <view class="detail-summary">
+        <view class="stat-item">
+          <text class="stat-label">赚取</text>
+          <text class="stat-val stat-val-earn">+{{selectedEarn}}</text>
         </view>
-        <text class="history-value {{item.type === 'earn' ? 'text-yellow' : item.type === 'spend' ? 'text-blue' : 'text-red'}}">
-          {{item.type === 'earn' ? '+' : '-'}}{{item.value}} ⭐️
-        </text>
+        <view class="stat-item">
+          <text class="stat-label">扣除</text>
+          <text class="stat-val stat-val-deduct">-{{selectedDeduct}}</text>
+        </view>
+        <view class="stat-item">
+          <text class="stat-label">兑换</text>
+          <text class="stat-val stat-val-spend">-{{selectedSpend}}</text>
+        </view>
+      </view>
+
+      <!-- 记录列表 -->
+      <view class="detail-list">
+        <view wx:for="{{selectedRecords}}" wx:key="id" class="record-item">
+          <view class="record-left">
+            <view class="record-icon {{item.type === 'earn' ? 'ri-earn' : item.type === 'spend' ? 'ri-spend' : 'ri-deduct'}}">
+              <text>{{item.icon || (item.type === 'earn' ? '🌟' : item.type === 'spend' ? '🎁' : '❌')}}</text>
+            </view>
+            <view class="record-info">
+              <text class="record-title">{{item.title}}</text>
+              <text class="record-time">{{item.formattedDate}}</text>
+            </view>
+          </view>
+          <text class="record-val {{item.type === 'earn' ? 'rv-earn' : item.type === 'spend' ? 'rv-spend' : 'rv-deduct'}}">
+            {{item.type === 'earn' ? '+' : '-'}}{{item.value}} ⭐
+          </text>
+        </view>
       </view>
     </view>
   </view>
 
   <!-- 模态框 -->
   <view wx:if="{{showModal}}" class="modal-overlay" catchtouchmove="preventMove">
-    <view class="modal-box animate-bounce-in">
-      <view class="modal-header">
-        <text wx:if="{{modalIsDanger}}" class="modal-warn-emoji">⚠️</text>
-        <text class="modal-title {{modalIsDanger ? 'modal-title-danger' : ''}}">{{modalTitle}}</text>
-      </view>
-      <text class="modal-message">{{modalMessage}}</text>
-      <view class="modal-actions">
-        <view class="modal-btn modal-btn-cancel" bindtap="handleModalCancel">
+    <view class="modal-sheet animate-bounce-in">
+      <view class="modal-handle"></view>
+      <text class="modal-emoji">⚠️</text>
+      <text class="modal-title {{modalIsDanger ? 'modal-title-danger' : ''}}">{{modalTitle}}</text>
+      <text class="modal-desc">{{modalMessage}}</text>
+      <view class="modal-btns">
+        <view class="modal-btn-cancel" bindtap="handleModalCancel">
           <text>{{modalCancelText}}</text>
         </view>
-        <view class="modal-btn {{modalIsDanger ? 'modal-btn-danger' : 'modal-btn-confirm'}}" bindtap="handleModalConfirm">
+        <view class="modal-btn-ok {{modalIsDanger ? 'modal-btn-danger' : 'modal-btn-primary'}}" bindtap="handleModalConfirm">
           <text>{{modalConfirmText}}</text>
         </view>
       </view>
@@ -60,8 +108,8 @@
   </view>
 
   <!-- 通知 -->
-  <view wx:if="{{notification}}" class="notification {{notification.type === 'error' ? 'notification-error' : 'notification-success'}}">
-    <text class="notification-icon">{{notification.type === 'error' ? '✕' : '✓'}}</text>
-    <text class="notification-text">{{notification.msg}}</text>
+  <view wx:if="{{notification}}" class="toast-wrap {{notification.type === 'error' ? 'toast-error' : 'toast-success'}}">
+    <text class="toast-icon">{{notification.type === 'error' ? '✕' : '✓'}}</text>
+    <text class="toast-text">{{notification.msg}}</text>
   </view>
 </view>

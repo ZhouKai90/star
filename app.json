@@ -2,13 +2,15 @@
   "pages": [
     "pages/index/index",
     "pages/history/history",
-    "pages/manage/manage"
+    "pages/manage/manage",
+    "pages/manage-items/manage-items",
+    "pages/manage-data/manage-data"
   ],
   "window": {
     "navigationBarBackgroundColor": "#ffffff",
-    "navigationBarTitleText": "星星存钱罐",
+    "navigationBarTitleText": "星星储蓄罐",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#f8fafc",
+    "backgroundColor": "#FFF9F0",
     "backgroundTextStyle": "dark",
     "navigationStyle": "custom"
   },

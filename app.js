@@ -25,11 +25,17 @@ App({
     rewards: [...defaults.rewards],
     badHabits: [...defaults.badHabits],
     history: [],
+    nickname: '家长',
   },
 
   onLaunch() {
     this.loadData();
+    if (!this.globalData.nickname) {
+      this.globalData.nickname = '家长';
+    }
   },
+
+  // ========== 本地数据读写 ==========
 
   loadData() {
     const stars = wx.getStorageSync('starJar_stars');
@@ -37,12 +43,14 @@ App({
     const rewards = wx.getStorageSync('starJar_rewards');
     const history = wx.getStorageSync('starJar_history');
     const badHabits = wx.getStorageSync('starJar_badHabits');
+    const nickname = wx.getStorageSync('starJar_nickname');
 
     if (stars) this.globalData.stars = parseInt(stars, 10);
     if (tasks) this.globalData.tasks = JSON.parse(tasks);
     if (rewards) this.globalData.rewards = JSON.parse(rewards);
     if (history) this.globalData.history = JSON.parse(history);
     if (badHabits) this.globalData.badHabits = JSON.parse(badHabits);
+    if (nickname) this.globalData.nickname = nickname;
   },
 
   saveData() {
@@ -52,6 +60,8 @@ App({
     wx.setStorageSync('starJar_history', JSON.stringify(this.globalData.history));
     wx.setStorageSync('starJar_badHabits', JSON.stringify(this.globalData.badHabits));
   },
+
+  // ========== 工具方法 ==========
 
   getTaskCompletionCountForDate(taskTitle, dateStr) {
     const date = new Date(dateStr);

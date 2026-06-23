@@ -1,0 +1,32 @@
+<view class="login-page">
+  <view class="login-box">
+    <text class="login-emoji">🌟</text>
+    <text class="login-title">星星存钱罐</text>
+    <text class="login-subtitle">儿童行为奖励系统</text>
+
+    <view class="login-form">
+      <input
+        class="login-input"
+        placeholder="输入你的昵称（如：妈妈）"
+        value="{{nickname}}"
+        bindinput="onNicknameInput"
+        maxlength="20"
+        focus="{{autoFocus}}"
+      />
+      <button
+        class="login-btn {{loading ? 'login-btn-loading' : ''}}"
+        bindtap="handleLogin"
+        disabled="{{loading || disableBtn}}"
+      >
+        <text wx:if="{{loading}}">登录中...</text>
+        <text wx:else>进入</text>
+      </button>
+    </view>
+
+    <text class="login-hint">数据将保存在云端，更换设备也能同步</text>
+  </view>
+
+  <view wx:if="{{errorMsg}}" class="login-error">
+    <text>{{errorMsg}}</text>
+  </view>
+</view>

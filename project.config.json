@@ -42,6 +42,7 @@
     }
   },
   "compileType": "miniprogram",
+  "cloudfunctionRoot": "cloudfunctions/",
   "libVersion": "3.7.1",
   "appid": "YOUR_APP_ID",
   "projectname": "星星存钱罐",
