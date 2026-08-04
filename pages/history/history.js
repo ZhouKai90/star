@@ -26,6 +26,10 @@ Page({
     monthLabel: '',
     calendarDays: [],
     weekdayHeaders: ['日', '一', '二', '三', '四', '五', '六'],
+    monthEarn: 0,
+    monthSpend: 0,
+    monthDeduct: 0,
+    monthRecordDays: 0,
 
     selectedDate: '',
     selectedDayLabel: '',
@@ -104,8 +108,21 @@ Page({
     }
 
     // 当月
+    let monthEarn = 0;
+    let monthSpend = 0;
+    let monthDeduct = 0;
+    let monthRecordDays = 0;
     for (let d = 1; d <= daysInMonth; d++) {
       const ds = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      const dayRecords = historyMap[ds] || [];
+      if (dayRecords.length > 0) {
+        monthRecordDays += 1;
+        dayRecords.forEach(item => {
+          if (item.type === 'earn') monthEarn += item.value;
+          else if (item.type === 'spend') monthSpend += item.value;
+          else if (item.type === 'deduct') monthDeduct += item.value;
+        });
+      }
       cells.push({ day: d, dateStr: ds, isCurrent: true, isToday: ds === todayStr, hasRecord: !!historyMap[ds] });
     }
 
@@ -137,6 +154,10 @@ Page({
       currentYear: year,
       currentMonth: month,
       monthLabel: formatMonthYear(year, month),
+      monthEarn,
+      monthSpend,
+      monthDeduct,
+      monthRecordDays,
       calendarDays: cells,
       isEmpty: !hasRecords,
     });

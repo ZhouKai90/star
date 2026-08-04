@@ -142,6 +142,48 @@
   opacity: 0.5;
 }
 
+.summary-strip {
+  display: flex;
+  gap: 12rpx;
+  margin-bottom: 24rpx;
+}
+
+.summary-pill {
+  flex: 1;
+  min-width: 0;
+  padding: 18rpx 16rpx;
+  border-radius: 22rpx;
+  background: #FFFFFF;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+}
+
+.summary-pill-label {
+  display: block;
+  font-size: 20rpx;
+  color: #999999;
+  line-height: 1.2;
+}
+
+.summary-pill-value {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 30rpx;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.summary-pill-earn .summary-pill-value {
+  color: #D97706;
+}
+
+.summary-pill-deduct .summary-pill-value {
+  color: #DC2626;
+}
+
+.summary-pill-spend .summary-pill-value {
+  color: #DB2777;
+}
+
 /* ===== 三标签分段导航 ===== */
 .tab-bar-card {
   display: flex;
@@ -234,17 +276,78 @@
 .custom-card {
   background: #FFFFFF;
   border-radius: 24rpx;
-  padding: 28rpx 24rpx;
+  padding: 24rpx;
   margin-bottom: 20rpx;
   box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+}
+
+.custom-card-expanded {
+  box-shadow: 0 8rpx 24rpx rgba(249, 115, 22, 0.10);
 }
 
 .custom-card-title {
   font-size: 28rpx;
   font-weight: 700;
   color: #333333;
-  margin-bottom: 20rpx;
   display: block;
+}
+
+.custom-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.custom-card-head:active {
+  opacity: 0.8;
+}
+
+.custom-card-head-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.custom-card-desc {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: #999999;
+  line-height: 1.5;
+}
+
+.custom-card-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 10rpx 16rpx;
+  border-radius: 99999rpx;
+  background: #FFF7ED;
+  flex-shrink: 0;
+}
+
+.custom-card-toggle-text {
+  font-size: 22rpx;
+  font-weight: 600;
+  color: #F97316;
+}
+
+.custom-card-toggle-icon {
+  font-size: 20rpx;
+  color: #F97316;
+  line-height: 1;
+  transform: rotate(0deg);
+  transition: transform 0.2s ease;
+}
+
+.custom-card-toggle-icon-open {
+  transform: rotate(180deg);
+}
+
+.custom-panel-body {
+  margin-top: 20rpx;
+  padding-top: 20rpx;
+  border-top: 2rpx solid #F8F5F0;
 }
 
 .custom-row {

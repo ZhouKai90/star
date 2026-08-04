@@ -8,6 +8,13 @@ Page({
     dateLabel: '',
     canGoForward: false,
     showConfetti: false,
+    customPanelExpanded: false,
+    customPanelTitle: '自定义奖励',
+    customPanelDesc: '没有合适的预设时，再手动补充一条',
+    customPanelActionText: '+ 添加',
+    dayEarnTotal: 0,
+    dayDeductTotal: 0,
+    affordableRewardCount: 0,
 
     displayTasks: [],
     displayBadHabits: [],
@@ -39,6 +46,7 @@ Page({
   onLoad() {
     this.selectedDate = new Date();
     this.updateDateDisplay();
+    this.syncCustomPanelMeta();
     this.refreshData();
     this.calcSafePadding();
   },
@@ -93,12 +101,33 @@ Page({
 
   refreshData() {
     const gd = app.globalData;
+    const displayRewards = this.buildRewards(gd);
+    const daySummary = this.buildDaySummary(gd, this.selectedDate);
     this.setData({
       stars: gd.stars,
       displayTasks: this.buildTasks(gd, this.selectedDate),
       displayBadHabits: this.buildBadHabits(gd),
-      displayRewards: this.buildRewards(gd),
+      displayRewards,
+      dayEarnTotal: daySummary.earn,
+      dayDeductTotal: daySummary.deduct + daySummary.spend,
+      affordableRewardCount: displayRewards.filter(item => item.canAfford).length,
     });
+  },
+
+  buildDaySummary(gd, date) {
+    return gd.history.reduce((summary, item) => {
+      if (!util.isSameDay(new Date(item.date), date)) {
+        return summary;
+      }
+      if (item.type === 'earn') {
+        summary.earn += item.value;
+      } else if (item.type === 'deduct') {
+        summary.deduct += item.value;
+      } else if (item.type === 'spend') {
+        summary.spend += item.value;
+      }
+      return summary;
+    }, { earn: 0, deduct: 0, spend: 0 });
   },
 
   buildTasks(gd, date) {
@@ -125,7 +154,39 @@ Page({
   },
 
   switchTab(e) {
-    this.setData({ activeTab: e.currentTarget.dataset.tab });
+    const nextTab = e.currentTarget.dataset.tab;
+    this.setData({
+      activeTab: nextTab,
+      customPanelExpanded: false,
+    });
+    this.syncCustomPanelMeta(nextTab);
+  },
+
+  syncCustomPanelMeta(tab) {
+    const currentTab = tab || this.data.activeTab;
+    const panelMetaMap = {
+      earn: {
+        customPanelTitle: '自定义奖励',
+        customPanelDesc: '没有合适的预设时，再手动补充一条',
+        customPanelActionText: '+ 添加',
+      },
+      deduct: {
+        customPanelTitle: '自定义扣星',
+        customPanelDesc: '用于临时记录未预设的坏习惯',
+        customPanelActionText: '- 扣星',
+      },
+      spend: {
+        customPanelTitle: '自定义兑换',
+        customPanelDesc: '临时添加一次性的兑换内容',
+        customPanelActionText: '兑换',
+      },
+    };
+
+    this.setData(panelMetaMap[currentTab] || panelMetaMap.earn);
+  },
+
+  toggleCustomPanel() {
+    this.setData({ customPanelExpanded: !this.data.customPanelExpanded });
   },
 
   goToManage() {
